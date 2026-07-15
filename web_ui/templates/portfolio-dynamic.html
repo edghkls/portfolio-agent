@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio Details - Dynamic</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
+        .navbar { background: linear-gradient(90deg, #2c3e50 0%, #3498db 100%); }
+        .navbar-brand { font-weight: bold; font-size: 1.5rem; color: #fff !important; }
+        .nav-link { color: rgba(255, 255, 255, 0.8) !important; margin: 0 10px; }
+        .nav-link:hover { color: #fff !important; }
+        .container-main { padding: 30px 20px; }
+        .card { border: none; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .treaty-card { background: white; padding: 20px; border-radius: 10px; margin-bottom: 15px; border-left: 4px solid #3498db; transition: all 0.3s; }
+        .treaty-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.15); }
+        .status-badge { display: inline-block; padding: 5px 10px; border-radius: 5px; font-size: 0.8rem; font-weight: bold; }
+        .status-excellent { background: #27ae60; color: white; }
+        .status-adequate { background: #f39c12; color: white; }
+        .status-poor { background: #e74c3c; color: white; }
+        .metric-badge { display: inline-block; background: #ecf0f1; padding: 5px 10px; border-radius: 5px; margin: 5px; font-size: 0.85rem; }
+        .filters { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">📊 Portfolio Agent</a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="/">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="/portfolio">Portfolio</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/scenarios">Scenarios</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/recommendations">Recommendations</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/reports">Reports</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid container-main">
+        <h1 style="color: white; margin-bottom: 30px;">📋 Treaty Portfolio</h1>
+
+        <!-- Filters -->
+        <div class="filters">
+            <h5 style="margin-bottom: 15px;">Advanced Filters (Real-time)</h5>
+            <div class="row">
+                <div class="col-md-3">
+                    <label class="form-label">Line of Business</label>
+                    <select class="form-select" id="filterLob" onchange="applyFilters()">
+                        <option value="">All LOBs</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Geography</label>
+                    <select class="form-select" id="filterGeo" onchange="applyFilters()">
+                        <option value="">All Geographies</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Sort By</label>
+                    <select class="form-select" id="sortBy" onchange="applyFilters()">
+                        <option value="rorac">RORAC (Highest)</option>
+                        <option value="premium">Premium (Highest)</option>
+                        <option value="profit">Expected Profit (Highest)</option>
+                        <option value="loss_ratio">Loss Ratio (Lowest)</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">&nbsp;</label>
+                    <button class="btn btn-primary w-100" onclick="applyFilters()">🔍 Apply Filters</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Treaties Container -->
+        <div id="treatiesContainer">
+            <div class="text-center" style="color: white;">
+                <p>Loading treaties...</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function loadTreaties() {
+            fetch('/api/portfolio')
+                .then(r => r.json())
+                .then(data => {
+                    displayTreaties(data.treaties);
+                    populateFilters(data);
+                })
+                .catch(e => console.error(e));
+        }
+
+        function displayTreaties(treaties) {
+            const container = document.getElementById('treatiesContainer');
+            if (treaties.length === 0) {
+                container.innerHTML = '<p style="color: white; text-align: center;">No treaties match the selected filters.</p>';
+                return;
+            }
+
+            container.innerHTML = treaties.map(t => `
+                <div class="treaty-card">
+                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                        <div>
+                            <h5 style="margin: 0 0 10px 0;">${t.treaty_id} - ${t.lob}</h5>
+                            <p style="margin: 0; color: #7f8c8d; font-size: 0.9rem;">📍 ${t.geography}</p>
+                        </div>
+                        <span class="status-badge status-${(t.performance_status || 'adequate').toLowerCase()}">${t.performance_status || 'Adequate'}</span>
+                    </div>
+                    <div style="margin-top: 15px; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px;">
+                        <div class="metric-badge">💰 Premium: $${(t.premium/1000).toFixed(0)}K</div>
+                        <div class="metric-badge">📊 RORAC: ${t.rorac.toFixed(1)}%</div>
+                        <div class="metric-badge">📈 Loss Ratio: ${t.loss_ratio.toFixed(1)}%</div>
+                        <div class="metric-badge">💵 Expected Profit: $${(t.expected_profit/1000).toFixed(0)}K</div>
+                        <div class="metric-badge">🎯 Rating: ${t.rating}</div>
+                        <div class="metric-badge">👤 Underwriter: ${t.underwriter}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function populateFilters(data) {
+            if (data.lob_list) {
+                const lobSelect = document.getElementById('filterLob');
+                data.lob_list.forEach(lob => {
+                    const opt = document.createElement('option');
+                    opt.value = lob;
+                    opt.textContent = lob;
+                    lobSelect.appendChild(opt);
+                });
+            }
+            if (data.geography_list) {
+                const geoSelect = document.getElementById('filterGeo');
+                data.geography_list.forEach(geo => {
+                    const opt = document.createElement('option');
+                    opt.value = geo;
+                    opt.textContent = geo;
+                    geoSelect.appendChild(opt);
+                });
+            }
+        }
+
+        function applyFilters() {
+            const lob = document.getElementById('filterLob').value;
+            const geo = document.getElementById('filterGeo').value;
+            const sort = document.getElementById('sortBy').value;
+
+            fetch('/api/filters/update', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ lob: lob || null, geography: geo || null })
+            })
+            .then(r => r.json())
+            .then(() => loadTreaties())
+            .catch(e => console.error(e));
+        }
+
+        loadTreaties();
+    </script>
+</body>
+</html>

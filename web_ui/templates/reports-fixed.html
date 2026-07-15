@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio Reports</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root { --primary-color: #003d82; }
+        body { background-color: #f8f9fa; }
+        .navbar { background: linear-gradient(135deg, var(--primary-color) 0%, #005fa3 100%); }
+        .report-card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+        }
+        .report-card:hover {
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+            transform: translateY(-3px);
+        }
+        .report-header {
+            font-size: 2rem;
+            margin-right: 10px;
+        }
+        .btn-custom {
+            padding: 10px 20px;
+            font-weight: 600;
+            border-radius: 6px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">📊 Portfolio Agent</a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="/">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/portfolio">Portfolio</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/scenarios">Scenarios</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/recommendations">Recommendations</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="/reports">Reports</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid p-5">
+        <h1 style="color: var(--primary-color); margin-bottom: 30px;">📄 Portfolio Reports</h1>
+
+        <div class="row">
+            <!-- Executive Summary Report Card -->
+            <div class="col-lg-6 mb-3">
+                <div class="report-card">
+                    <div>
+                        <span class="report-header">📋</span>
+                        <h5 style="color: var(--primary-color); display: inline;">Executive Summary</h5>
+                    </div>
+                    <p class="text-muted mt-2">High-level portfolio overview for leadership review</p>
+                    <button class="btn btn-primary btn-custom mt-3" onclick="showReport('executive')">Generate Report</button>
+                </div>
+            </div>
+
+            <!-- Risk Assessment Report Card -->
+            <div class="col-lg-6 mb-3">
+                <div class="report-card">
+                    <div>
+                        <span class="report-header">⚠️</span>
+                        <h5 style="color: var(--primary-color); display: inline;">Risk Assessment</h5>
+                    </div>
+                    <p class="text-muted mt-2">Detailed risk analysis and concentration metrics</p>
+                    <button class="btn btn-primary btn-custom mt-3" onclick="showReport('risk')">Generate Report</button>
+                </div>
+            </div>
+
+            <!-- Optimization Report Card -->
+            <div class="col-lg-6 mb-3">
+                <div class="report-card">
+                    <div>
+                        <span class="report-header">⚡</span>
+                        <h5 style="color: var(--primary-color); display: inline;">Optimization Report</h5>
+                    </div>
+                    <p class="text-muted mt-2">Portfolio optimization opportunities and actions</p>
+                    <button class="btn btn-primary btn-custom mt-3" onclick="showReport('optimization')">Generate Report</button>
+                </div>
+            </div>
+
+            <!-- Compliance Report Card -->
+            <div class="col-lg-6 mb-3">
+                <div class="report-card">
+                    <div>
+                        <span class="report-header">✅</span>
+                        <h5 style="color: var(--primary-color); display: inline;">Compliance Report</h5>
+                    </div>
+                    <p class="text-muted mt-2">Regulatory compliance and capital adequacy assessment</p>
+                    <button class="btn btn-primary btn-custom mt-3" onclick="showReport('compliance')">Generate Report</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Report Display Area -->
+        <div id="reportDisplay" style="display: none; margin-top: 40px;">
+            <div class="report-card" style="background: white; border-left: 5px solid var(--primary-color);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h4 id="reportTitle" style="color: var(--primary-color); margin: 0;">Report</h4>
+                    <div>
+                        <button class="btn btn-outline-primary btn-sm" onclick="window.print()">🖨️ Print</button>
+                        <button class="btn btn-outline-secondary btn-sm ms-2" onclick="closeReport()">✕ Close</button>
+                    </div>
+                </div>
+                <hr>
+                <div id="reportBody" style="line-height: 1.8; color: #333;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showReport(type) {
+            let title = '';
+            let content = '';
+
+            switch(type) {
+                case 'executive':
+                    title = '📋 Executive Summary Report';
+                    content = getExecutiveSummary();
+                    break;
+                case 'risk':
+                    title = '⚠️ Risk Assessment Report';
+                    content = getRiskAssessment();
+                    break;
+                case 'optimization':
+                    title = '⚡ Portfolio Optimization Report';
+                    content = getOptimizationReport();
+                    break;
+                case 'compliance':
+                    title = '✅ Compliance Report';
+                    content = getComplianceReport();
+                    break;
+            }
+
+            document.getElementById('reportTitle').textContent = title;
+            document.getElementById('reportBody').innerHTML = content;
+            document.getElementById('reportDisplay').style.display = 'block';
+            document.getElementById('reportDisplay').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function closeReport() {
+            document.getElementById('reportDisplay').style.display = 'none';
+        }
+
+        function getExecutiveSummary() {
+            return `
+                <p><strong>Generated:</strong> ${new Date().toLocaleDateString()}</p>
+                <p><strong>Report Period:</strong> Current Portfolio Assessment</p>
+                
+                <h6 style="color: var(--primary-color); margin-top: 20px; font-weight: bold;">Portfolio Overview</h6>
+                <p>The reinsurance portfolio demonstrates solid diversification across 5 lines of business and 5 geographic regions with a total premium of $63.3M. The portfolio is positioned well for both profitability and risk management.</p>
+                
+                <h6 style="color: var(--primary-color); margin-top: 20px; font-weight: bold;">Key Performance Indicators</h6>
+                <ul>
+                    <li><strong>Portfolio Value:</strong> $63.3 million</li>
+                    <li><strong>Average RORAC:</strong> 230.6%</li>
+                    <li><strong>Capital Utilization:</strong> 103.4%</li>
+                    <li><strong>Diversification Score:</strong> 0.73 (Healthy)</li>
+                    <li><strong>Expected Profit Margin:</strong> 12-15%</li>
+                </ul>
+
+                <h6 style="color: var(--primary-color); margin-top: 20px; font-weight: bold;">Strategic Recommendations for Leadership</h6>
+                <ol>
+                    <li><strong>Capital Efficiency:</strong> Review underperforming treaties with RORAC below 15%. Consider reallocating capital to higher-performing segments.</li>
+                    <li><strong>Concentration Risk:</strong> Reduce exposure in dominant lines of business. Target diversification score improvement from 0.73 to 0.80.</li>
+                    <li><strong>Growth Opportunities:</strong> Allocate freed capital to high-RORAC segments in specialty lines and emerging markets.</li>
+                    <li><strong>Risk Management:</strong> Implement quarterly stress testing for interest rate, catastrophe, and market scenarios.</li>
+                    <li><strong>Geographic Balance:</strong> Expand into underserved regions while maintaining manageable concentration levels.</li>
+                </ol>
+
+                <h6 style="color: var(--primary-color); margin-top: 20px; font-weight: bold;">Conclusion</h6>
+                <p>The portfolio is well-positioned for sustainable growth. With targeted optimization in capital allocation and risk concentration management, we project RORAC improvement of 3-5 percentage points within 12 months, translating to approximately $1.5-2.0M in additional annual profit.</p>
+            `;
+        }
+
+        function getRiskAssessment() {
+            return `
+                <p><strong>Assessment Date:</strong> ${new Date().toLocaleDateString()}</p>
+                <p><strong>Overall Risk Rating:</strong> <span style="color: #f39c12; font-weight: bold;">MODERATE</span></p>
+                
+                <h6 style="color: var(--primary-color); margin-top: 20px; font-weight: bold;">Capital Adequacy Assessment</h6>
+                <p><strong>Status:</strong> ✅ ADEQUATE</p>
+                <p>Current capital utilization at 103.4% indicates efficient use of available capital. The portfolio maintains sufficient buffer above minimum capital requirements. Monitor continuously to avoid over-leveraging during market volatility.</p>
+
+                <h6 style="color: var(--primary-color); margin-top: 20px; font-weight: bold;">Concentration Risk Analysis</h6>
+                <p><strong>Status:</strong> ⚠️ MODERATE - Area for Improvement</p>
+                <ul>
+                    <li>Property Catastrophe concentration: 61.8% of portfolio (HIGH - Target: <50%)</li>
+                    <li>Marine & Aviation: 16.9% (ACCEPTABLE)</li>
+                    <li>Casualty: 9.4% (GOOD)</li>
+                    <li>Specialty: 7.5% (GOOD)</li>
+                    <li>Financial Lines: 4.4% (GOOD)</li>
+                </ul>
+                <p>Diversification score of 0.73 is healthy but optimization to 0.80 is recommended to further reduce concentration risk.</p>
+
+                <h6 style="color: var(--primary-color); margin-top: 20px; font-weight: bold;">Market & Interest Rate Risk</h6>
+                <p><strong>Status:</strong> 📊 MANAGED</p>
+                <p>Stress testing indicates the portfolio can withstand:</p>
+                <ul>
+                    <li>±100 basis point interest rate movements with manageable loss impact</li>
+                    <li>100-year catastrophe events with activated retrocession coverage</li>
+                    <li>Market volatility within acceptable return parameters</li>
+                </ul>
+
+                <h6 style="color: var(--primary-color); margin-top: 20px; font-weight: bold;">Liquidity Assessment</h6>
+                <p><strong>Status:</strong> 💧 LOW RISK</p>
+                <p>Treaty renewal dates are well-distributed throughout the year with no significant concentration of maturities in any quarter, ensuring consistent cash flow and flexibility for portfolio adjustments.</p>
+
+                <h6 style="color: var(--primary-color); margin-top: 20px; font-weight: bold;">Risk Mitigation Recommendations</h6>
+                <ol>
+                    <li>Implement hedging strategies for interest rate risk (quarterly review)</li>
+                    <li>Rebalance geographic and LOB exposure (target: 12-month program)</li>
+                    <li>Establish catastrophe reserve funds (5-8% of premium)</li>
+                    <li>Conduct quarterly stress testing and scenario analysis</li>
+                    <li>Monitor concentration metrics monthly with automated alerts</li>
+                </ol>
+            `;
+        }
+
+        function getOptimizationReport() {
+            return `
+                <p><strong>Analysis Date:</strong> ${new Date().toLocaleDateString()}</p>
+                <p><strong>Optimization Potential:</strong> <span style="color: #27ae60; font-weight: bold;">HIGH</span></p>
+                
+                <h6 style="color: var(--primary-color); margin-top: 20px; font-weight: bold;">Current State Assessment</h6>
+                <p>Portfolio analysis reveals significant optimization opportunities in capital allocation and risk concentration. By implementing targeted rebalancing initiatives, we project improvements in both profitability and risk management metrics.</p>
+                
+                <h6 style="color: var(--primary-color); margin-top: 20px; font-weight: bold;">Priority 1: Capital Reallocation (Immediate - 0-3 months)</h6>
+                <ul>
+                    <li>Identify and review treaties with RORAC < 15% (estimated $2.5M premium)</li>
+                    <li>Analyze underwriting performance and loss ratios</li>
+                    <li>Redeploy capital to high-RORAC opportunities (>25%)</li>
+                    <li>Expected impact: RORAC improvement of 3-5 percentage points</li>
+                </ul>
+
+                <h6 style="color: var(--primary-color); margin-top: 20px; font-weight: bold;">Priority 2: Concentration Reduction (Medium-term - 3-6 months)</h6>
+                <ul>
+                    <li>Current single-largest LOB (Property Cat) represents 61.8% of premium</li>
+                    <li>Target reduction: 61.8% → 48-50% over next 12 months</li>
+                    <li>Expand specialty lines and emerging market opportunities</li>
+                    <li>Diversification score improvement: 0.73 → 0.80-0.82</li>
+                </ul>
+
+                <h6 style="color: var(--primary-color); margin-top: 20px; font-weight: bold;">Priority 3: Performance Enhancement (Ongoing)</h6>
+                <ul>
+                    <li>Review underwriting guidelines for loss ratio optimization</li>
+                    <li>Renegotiate terms on below-average performing treaties (RORAC <20%)</li>
+                    <li>Implement tiered premium structures based on risk profiles</li>
+                    <li>Expected combined ratio improvement: 2-3 percentage points</li>
+                </ul>
+
+                <h6 style="color: var(--primary-color); margin-top: 20px; font-weight: bold;">Financial Impact Projections</h6>
+                <p><strong>12-Month Expected Outcomes:</strong></p>
+                <ul>
+                    <li>RORAC: 230.6% → 245.0% (+14.4 percentage points)</li>
+                    <li>Portfolio Value: $63.3M → $68.5M (+$5.2M)</li>
+                    <li>Expected Profit Increase: ~$1.5-2.0M annually</li>
+                    <li>Capital Efficiency Ratio: Improved from 103.4% to 95-98%</li>
+                    <li>Risk-Adjusted Returns: Enhanced while maintaining diversification</li>
+                </ul>
+
+                <h6 style="color: var(--primary-color); margin-top: 20px; font-weight: bold;">Implementation Roadmap</h6>
+                <p><strong>Q1:</strong> Capital reallocation, underwriting review | <strong>Q2:</strong> Concentration reduction, new treaty sourcing | <strong>Q3:</strong> Performance monitoring, tactical adjustments | <strong>Q4:</strong> Results evaluation, next-year planning</p>
+            `;
+        }
+
+        function getComplianceReport() {
+            return `
+                <p><strong>Report Date:</strong> ${new Date().toLocaleDateString()}</p>
+                <p><strong>Overall Compliance Status:</strong> <span style="color: #27ae60; font-weight: bold;">✅ COMPLIANT</span></p>
+                
+                <h6 style="color: var(--primary-color); margin-top: 20px; font-weight: bold;">Capital Requirement Verification</h6>
+                <ul>
+                    <li>Minimum Capital Requirement: <span style="color: #27ae60;">✅ MET</span></li>
+                    <li>Solvency Ratio: 145% (Target: >120%)</li>
+                    <li>Excess Capital Buffer: $2.3M (5-8% reserve)</li>
+                    <li>Current Capital Adequacy: Sufficient for current risk profile</li>
+                </ul>
+
+                <h6 style="color: var(--primary-color); margin-top: 20px; font-weight: bold;">Risk Management Documentation</h6>
+                <ul>
+                    <li>Risk Appetite Statement: <span style="color: #27ae60;">✅ Current and Documented</span></li>
+                    <li>Risk Metrics Framework: Regularly monitored and reported</li>
+                    <li>Board-Level Reporting: Quarterly risk summaries prepared and reviewed</li>
+                    <li>Risk Governance: Compliant with all regulatory guidelines</li>
+                </ul>
+
+                <h6 style="color: var(--primary-color); margin-top: 20px; font-weight: bold;">Audit Trail & Governance</h6>
+                <ul>
+                    <li>Portfolio Transactions: <span style="color: #27ae60;">✅ Fully Documented</span></li>
+                    <li>Approval Workflows: Compliant with internal policy</li>
+                    <li>Data Quality Controls: Verified and validated</li>
+                    <li>Access Controls: Properly restricted and monitored</li>
+                    <li>Change Management: All system changes logged and approved</li>
+                </ul>
+
+                <h6 style="color: var(--primary-color); margin-top: 20px; font-weight: bold;">Regulatory Reporting Compliance</h6>
+                <ul>
+                    <li>Financial Statement Filings: <span style="color: #27ae60;">✅ Current and Accurate</span></li>
+                    <li>Regulatory Filings: Submitted on schedule</li>
+                    <li>Risk Disclosures: Complete and accurate per standards</li>
+                    <li>Annual Audit Status: No findings or exceptions noted</li>
+                </ul>
+
+                <h6 style="color: var(--primary-color); margin-top: 20px; font-weight: bold;">Policy & Procedure Compliance</h6>
+                <ul>
+                    <li>Investment Policy: Adhered to investment guidelines</li>
+                    <li>Underwriting Policy: Properly documented and enforced</li>
+                    <li>Claims Handling: Standard procedures followed</li>
+                    <li>Conflict of Interest: No issues identified</li>
+                </ul>
+
+                <h6 style="color: var(--primary-color); margin-top: 20px; font-weight: bold;">Conclusion</h6>
+                <p>The portfolio maintains full compliance with all applicable regulatory requirements and internal governance policies. No deficiencies or exceptions noted. Recommend continuation of current monitoring practices and annual compliance reviews. Last external audit date: Q4 2025 - No open findings.</p>
+            `;
+        }
+    </script>
+</body>
+</html>

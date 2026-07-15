@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio Details</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #003d82;
+            --accent-color: #ff6b35;
+        }
+        
+        body {
+            background-color: #f8f9fa;
+        }
+        
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #005fa3 100%);
+        }
+        
+        .treaty-row {
+            background: white;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 6px;
+            border-left: 3px solid var(--primary-color);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+        }
+        
+        .treaty-row:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.12);
+        }
+        
+        .metric-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            background-color: #f0f0f0;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-right: 8px;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">📊 Portfolio Agent</a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="/">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="/portfolio">Portfolio</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/scenarios">Scenarios</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/recommendations">Recommendations</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container-fluid p-4">
+        <h1 style="color: var(--primary-color); font-weight: 700; margin-bottom: 30px;">Treaty Portfolio</h1>
+
+        <!-- Filters -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <label>Filter by Line of Business</label>
+                <select class="form-select" id="lobFilter" onchange="refreshPortfolio()">
+                    <option value="">All Lines of Business</option>
+                    <option value="Property Catastrophe">Property Catastrophe</option>
+                    <option value="Casualty">Casualty</option>
+                    <option value="Marine & Aviation">Marine & Aviation</option>
+                    <option value="Financial Lines">Financial Lines</option>
+                    <option value="Specialty">Specialty</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label>Filter by Geography</label>
+                <select class="form-select" id="geoFilter" onchange="refreshPortfolio()">
+                    <option value="">All Geographies</option>
+                    <option value="North America">North America</option>
+                    <option value="Europe">Europe</option>
+                    <option value="Asia Pacific">Asia Pacific</option>
+                    <option value="Latin America">Latin America</option>
+                    <option value="Africa/Middle East">Africa/Middle East</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label>Sort By</label>
+                <select class="form-select" id="sortBy" onchange="refreshPortfolio()">
+                    <option value="rorac">RORAC (Highest)</option>
+                    <option value="premium">Premium (Highest)</option>
+                    <option value="profit">Expected Profit (Highest)</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Treaties List -->
+        <div id="treatiesContainer" class="loading">
+            Loading treaties...
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        async function refreshPortfolio() {
+            const lob = document.getElementById('lobFilter').value;
+            const geo = document.getElementById('geoFilter').value;
+
+            try {
+                let url = '/api/data/treaties';
+                const params = new URLSearchParams();
+                if (lob) params.append('lob', lob);
+                if (geo) params.append('geography', geo);
+                if (params.toString()) url += '?' + params.toString();
+
+                const treaties = await fetch(url).then(r => r.json());
+                displayTreaties(treaties);
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        function displayTreaties(treaties) {
+            const container = document.getElementById('treatiesContainer');
+            
+            if (treaties.length === 0) {
+                container.innerHTML = '<p class="text-muted">No treaties match the selected filters.</p>';
+                return;
+            }
+
+            container.innerHTML = treaties.map(t => `
+                <div class="treaty-row">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <h6 style="color: var(--primary-color); font-weight: 600; margin-bottom: 5px;">${t.treaty_id}</h6>
+                            <p style="margin-bottom: 0; font-size: 0.9rem; color: #666;">
+                                <strong>${t.lob}</strong> | ${t.geography}
+                            </p>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="metric-badge">Premium: $${(t.premium/1000).toFixed(1)}K</div>
+                            <div class="metric-badge">RORAC: ${t.rorac.toFixed(1)}%</div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="metric-badge">Loss Ratio: ${(t.loss_ratio*100).toFixed(1)}%</div>
+                            <div class="metric-badge">Status: ${t.performance_status}</div>
+                        </div>
+                        <div class="col-md-3" style="text-align: right;">
+                            <p style="color: #666; margin-bottom: 5px;">Expected Profit</p>
+                            <h6 style="color: var(--accent-color); font-weight: 600;">$${(t.expected_profit/1000).toFixed(1)}K</h6>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        document.addEventListener('DOMContentLoaded', refreshPortfolio);
+    </script>
+</body>
+</html>

@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio Optimisation Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    <style>
+        :root {
+            --primary-color: #003d82;
+            --accent-color: #ff6b35;
+            --success-color: #06a77d;
+            --warning-color: #ffd23f;
+            --danger-color: #d62828;
+        }
+        
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #005fa3 100%);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.3rem;
+            letter-spacing: 0.5px;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+            border-left: 4px solid var(--primary-color);
+            transition: transform 0.2s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.12);
+        }
+        
+        .stat-card h6 {
+            color: #666;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+        }
+        
+        .stat-card .value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+        
+        .stat-card.accent {
+            border-left-color: var(--accent-color);
+        }
+        
+        .stat-card.accent .value {
+            color: var(--accent-color);
+        }
+        
+        .stat-card.success {
+            border-left-color: var(--success-color);
+        }
+        
+        .stat-card.success .value {
+            color: var(--success-color);
+        }
+        
+        .stat-card.warning {
+            border-left-color: var(--warning-color);
+        }
+        
+        .stat-card.warning .value {
+            color: #ff6b35;
+        }
+        
+        .section-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-top: 30px;
+            margin-bottom: 20px;
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--accent-color);
+            padding-bottom: 10px;
+        }
+        
+        .recommendation-card {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 4px solid var(--primary-color);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+        }
+        
+        .recommendation-card.high {
+            border-left-color: var(--danger-color);
+        }
+        
+        .recommendation-card.medium {
+            border-left-color: var(--warning-color);
+        }
+        
+        .recommendation-card.low {
+            border-left-color: var(--success-color);
+        }
+        
+        .priority-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .priority-badge.high {
+            background-color: rgba(214, 40, 40, 0.1);
+            color: var(--danger-color);
+        }
+        
+        .priority-badge.medium {
+            background-color: rgba(255, 210, 63, 0.1);
+            color: #ff6b35;
+        }
+        
+        .priority-badge.low {
+            background-color: rgba(6, 168, 125, 0.1);
+            color: var(--success-color);
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+        
+        .error-message {
+            background-color: rgba(214, 40, 40, 0.1);
+            border-left: 4px solid var(--danger-color);
+            color: var(--danger-color);
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">📊 Portfolio Agent</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link active" href="/">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/portfolio">Portfolio</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/scenarios">Scenarios</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/recommendations">Recommendations</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/reports">Reports</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container-fluid p-4">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-lg-8">
+                <h1 class="display-6" style="color: var(--primary-color); font-weight: 700;">
+                    Portfolio Optimisation Dashboard
+                </h1>
+                <p class="text-muted" id="lastUpdated">Last updated: --</p>
+            </div>
+            <div class="col-lg-4 text-end">
+                <button class="btn btn-primary" onclick="refreshDashboard()">
+                    🔄 Refresh
+                </button>
+                <button class="btn btn-outline-primary" onclick="window.location.href='/reports'">
+                    📋 Generate Report
+                </button>
+            </div>
+        </div>
+
+        <!-- Key Metrics -->
+        <div class="row mb-4" id="metricsContainer">
+            <div class="col-lg-3">
+                <div class="stat-card accent">
+                    <h6>Portfolio Value</h6>
+                    <div class="value" id="portfolioValue">--</div>
+                </div>
+            </div>
+            <div class="col-lg-3">
+                <div class="stat-card">
+                    <h6>Capital Utilization</h6>
+                    <div class="value" id="capitalUtil">--</div>
+                    <small class="text-muted">% of available capital</small>
+                </div>
+            </div>
+            <div class="col-lg-3">
+                <div class="stat-card success">
+                    <h6>Average RORAC</h6>
+                    <div class="value" id="avgRorac">--</div>
+                    <small class="text-muted">Return on Risk-Adjusted Capital</small>
+                </div>
+            </div>
+            <div class="col-lg-3">
+                <div class="stat-card warning">
+                    <h6>Diversification Score</h6>
+                    <div class="value" id="diversScore">--</div>
+                    <small class="text-muted">Out of 1.0</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="row mb-4">
+            <div class="col-lg-6">
+                <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.08);">
+                    <h5 style="color: var(--primary-color); font-weight: 600; margin-bottom: 15px;">Portfolio by Line of Business</h5>
+                    <canvas id="lobChart" height="300"></canvas>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.08);">
+                    <h5 style="color: var(--primary-color); font-weight: 600; margin-bottom: 15px;">Geographic Distribution</h5>
+                    <canvas id="geoChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Recommendations -->
+        <div class="row">
+            <div class="col-lg-12">
+                <h3 class="section-title">Top Recommendations</h3>
+                <div id="recommendationsContainer" class="loading">
+                    Loading recommendations...
+                </div>
+            </div>
+        </div>
+
+        <!-- Risk Assessment -->
+        <div class="row mt-4">
+            <div class="col-lg-12">
+                <h3 class="section-title">Risk Assessment</h3>
+                <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.08);">
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <h6 style="color: var(--primary-color); font-weight: 600;">Capital Adequacy</h6>
+                            <p id="capitalAdequacy">--</p>
+                        </div>
+                        <div class="col-lg-6">
+                            <h6 style="color: var(--primary-color); font-weight: 600;">Concentration Risk</h6>
+                            <p id="concentrationRisk">--</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let lobChart, geoChart;
+
+        async function refreshDashboard() {
+            try {
+                // Fetch portfolio summary
+                const summary = await fetch('/api/portfolio/summary').then(r => r.json());
+                updateMetrics(summary);
+
+                // Fetch detailed metrics
+                const metrics = await fetch('/api/portfolio/metrics').then(r => r.json());
+                updateCharts(metrics);
+
+                // Fetch recommendations
+                const recommendations = await fetch('/api/recommendations').then(r => r.json());
+                updateRecommendations(recommendations);
+
+                // Update timestamp in IST
+                const istTime = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+                document.getElementById('lastUpdated').textContent = `Last updated: ${istTime} IST`;
+            } catch (error) {
+                console.error('Dashboard error:', error);
+                showError('Failed to load dashboard data');
+            }
+        }
+
+        function updateMetrics(summary) {
+            const pv = summary.portfolio_value || 0;
+            const cu = summary.capital_utilization || 0;
+            const ar = summary.average_rorac || 0;
+            const ds = summary.diversification_score || 0;
+            
+            document.getElementById('portfolioValue').textContent = `$${(pv / 1e6).toFixed(1)}M`;
+            document.getElementById('capitalUtil').textContent = `${cu.toFixed(1)}%`;
+            document.getElementById('avgRorac').textContent = `${ar.toFixed(1)}%`;
+            document.getElementById('diversScore').textContent = ds.toFixed(2);
+            
+            // Update Risk Assessment
+            const capitalAdequacyStatus = cu < 90 ? '✅ Adequate' : (cu < 110 ? '⚠️ Adequate' : '❌ Insufficient');
+            document.getElementById('capitalAdequacy').textContent = capitalAdequacyStatus;
+            
+            const concentrationStatus = ds > 0.7 ? '✅ Low' : (ds > 0.5 ? '⚠️ Moderate' : '❌ High');
+            document.getElementById('concentrationRisk').textContent = concentrationStatus;
+        }
+
+        function updateCharts(metrics) {
+            const lobCtx = document.getElementById('lobChart').getContext('2d');
+            const geoCtx = document.getElementById('geoChart').getContext('2d');
+
+            // Destroy existing charts if they exist
+            if (lobChart) lobChart.destroy();
+            if (geoChart) geoChart.destroy();
+
+            // LOB Chart
+            const lobData = metrics.lob_breakdown;
+            lobChart = new Chart(lobCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(lobData),
+                    datasets: [{
+                        data: Object.values(lobData),
+                        backgroundColor: ['#003d82', '#ff6b35', '#06a77d', '#ffd23f', '#d62828'],
+                        borderColor: 'white',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true
+                }
+            });
+
+            // Geographic Chart
+            const geoData = metrics.geography_breakdown;
+            geoChart = new Chart(geoCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(geoData),
+                    datasets: [{
+                        data: Object.values(geoData),
+                        backgroundColor: ['#003d82', '#ff6b35', '#06a77d', '#ffd23f', '#d62828'],
+                        borderColor: 'white',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true
+                }
+            });
+        }
+
+        function updateRecommendations(data) {
+            const container = document.getElementById('recommendationsContainer');
+            const recs = data.recommendations.slice(0, 5);
+
+            if (recs.length === 0) {
+                container.innerHTML = '<p class="text-muted">No recommendations at this time.</p>';
+                return;
+            }
+
+            container.innerHTML = recs.map(rec => `
+                <div class="recommendation-card ${rec.priority.toLowerCase()}">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 style="margin-bottom: 10px; color: var(--primary-color);">${rec.title}</h6>
+                            <span class="priority-badge ${rec.priority.toLowerCase()}">${rec.priority} Priority</span>
+                            <p style="margin-top: 10px; color: #666; margin-bottom: 0;">${rec.business_justification}</p>
+                        </div>
+                        <div style="text-align: right; min-width: 150px;">
+                            <div style="font-size: 0.9rem; color: #999;">Confidence</div>
+                            <div style="font-weight: 600; font-size: 1.1rem; color: var(--primary-color);">${(rec.confidence_score * 100).toFixed(0)}%</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function showError(message) {
+            const container = document.getElementById('recommendationsContainer');
+            container.innerHTML = `<div class="error-message">${message}</div>`;
+        }
+
+        function updateTimestamp() {
+            const istTime = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+            document.getElementById('lastUpdated').textContent = `Last updated: ${istTime} IST`;
+        }
+
+        // Load dashboard on page load and set up auto-refresh
+        document.addEventListener('DOMContentLoaded', function() {
+            refreshDashboard();
+            // Update timestamp every second
+            setInterval(updateTimestamp, 1000);
+            // Refresh full dashboard every 1 minute (60 seconds)
+            setInterval(refreshDashboard, 60000);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scenario Analysis - Dynamic</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <style>
+        body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
+        .navbar { background: linear-gradient(90deg, #2c3e50 0%, #3498db 100%); }
+        .container-main { padding: 30px 20px; }
+        .card { border: none; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); background: white; }
+        .sim-card { padding: 25px; margin-bottom: 20px; }
+        .spinner { animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .status-running { background: #f39c12; } 
+        .status-completed { background: #27ae60; }
+        .toast-container { position: fixed; top: 20px; right: 20px; z-index: 1050; }
+        .toast { background: white; padding: 15px; border-radius: 8px; margin-bottom: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">📊 Portfolio Agent</a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="/">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/portfolio">Portfolio</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="/scenarios">Scenarios</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/recommendations">Recommendations</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/reports">Reports</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid container-main">
+        <h1 style="color: white; margin-bottom: 30px;">📊 Scenario Analysis & Simulations</h1>
+
+        <!-- Simulation Control -->
+        <div class="card sim-card">
+            <h5 style="margin-bottom: 20px;">🎲 Run Scenario Simulation</h5>
+            <div class="row">
+                <div class="col-md-6">
+                    <label class="form-label">Scenario Type</label>
+                    <select class="form-select" id="scenarioType" onchange="updateParameterFields()">
+                        <option value="">-- Select Scenario --</option>
+                        <option value="monte_carlo">Monte Carlo Simulation (1000 iterations)</option>
+                        <option value="interest_rate">Interest Rate Stress Test</option>
+                        <option value="catastrophe">Catastrophe Event Simulation</option>
+                        <option value="comparison">Scenario Comparison (Base/Optimistic/Moderate/Severe)</option>
+                    </select>
+                </div>
+                <div class="col-md-6" id="parameterFields">
+                    <!-- Dynamic parameter fields appear here -->
+                </div>
+            </div>
+            <button class="btn btn-primary mt-3" onclick="runSimulation()" style="width: 100%;">🚀 Run Simulation</button>
+        </div>
+
+        <!-- Results Container -->
+        <div id="resultsContainer"></div>
+
+        <!-- Live Simulation Status -->
+        <div id="simulationStatus" style="display: none;">
+            <div class="card sim-card">
+                <div style="text-align: center;">
+                    <span class="spinner">⏳</span>
+                    <p style="margin-top: 10px; color: #f39c12;">Running simulation... Please wait</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const socket = io();
+
+        socket.on('scenario_completed', function(data) {
+            console.log('Scenario completed:', data);
+            document.getElementById('simulationStatus').style.display = 'none';
+            displayResults(data.result, data.scenario_type);
+            showToast('✅ Simulation completed successfully!', 'success');
+        });
+
+        socket.on('scenario_error', function(data) {
+            console.log('Scenario error:', data);
+            document.getElementById('simulationStatus').style.display = 'none';
+            showToast('❌ Simulation error: ' + data.error, 'error');
+        });
+
+        function updateParameterFields() {
+            const type = document.getElementById('scenarioType').value;
+            const fieldsDiv = document.getElementById('parameterFields');
+            
+            if (type === 'interest_rate') {
+                fieldsDiv.innerHTML = `
+                    <label class="form-label">Rate Change (bps: -500 to +500)</label>
+                    <input type="number" class="form-control" id="rateChange" value="50" min="-500" max="500">
+                `;
+            } else if (type === 'catastrophe') {
+                fieldsDiv.innerHTML = `
+                    <label class="form-label">Event Type</label>
+                    <select class="form-select" id="eventType">
+                        <option value="hurricane">Hurricane</option>
+                        <option value="earthquake">Earthquake</option>
+                        <option value="flood">Flood</option>
+                    </select>
+                `;
+            } else {
+                fieldsDiv.innerHTML = '';
+            }
+        }
+
+        function runSimulation() {
+            const type = document.getElementById('scenarioType').value;
+            if (!type) {
+                showToast('❌ Please select a scenario type', 'error');
+                return;
+            }
+
+            const data = { simulation_type: type };
+            
+            if (type === 'interest_rate') {
+                data.rate_change = parseInt(document.getElementById('rateChange').value) || 50;
+            } else if (type === 'catastrophe') {
+                data.event_type = document.getElementById('eventType').value;
+                data.return_period = 100;
+            }
+
+            document.getElementById('simulationStatus').style.display = 'block';
+            document.getElementById('resultsContainer').innerHTML = '';
+
+            fetch('/api/scenario/simulate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(r => r.json())
+            .then(result => {
+                console.log('Simulation result:', result);
+                document.getElementById('simulationStatus').style.display = 'none';
+                const scenarioType = document.getElementById('scenarioType').value;
+                displayResults(result, scenarioType);
+                showToast('✅ Simulation completed!', 'success');
+            })
+            .catch(e => {
+                console.error('Error:', e);
+                showToast('❌ Error running simulation', 'error');
+                document.getElementById('simulationStatus').style.display = 'none';
+            });
+        }
+
+        function displayResults(result, scenarioType) {
+            const container = document.getElementById('resultsContainer');
+            if (!result) return;
+            
+            let html = `<div class="card sim-card"><h5 style="margin-bottom: 20px; color: #2c3e50;">📊 ${(scenarioType || 'Simulation').replace(/_/g, ' ').toUpperCase()} Results</h5>`;
+            
+            // Monte Carlo Results
+            if (result.loss_statistics && result.profit_statistics) {
+                html += `
+                    <div style="margin-bottom: 20px;">
+                        <h6 style="color: #e74c3c; margin-bottom: 10px;">💔 Loss Statistics</h6>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div style="background: #ecf0f1; padding: 15px; border-radius: 8px; margin-bottom: 10px;">
+                                    <div style="font-size: 0.85rem; color: #7f8c8d; margin-bottom: 5px;">Mean Loss</div>
+                                    <div style="font-size: 1.3rem; font-weight: bold; color: #e74c3c;">$${(result.loss_statistics.mean / 1000000).toFixed(2)}M</div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div style="background: #ecf0f1; padding: 15px; border-radius: 8px; margin-bottom: 10px;">
+                                    <div style="font-size: 0.85rem; color: #7f8c8d; margin-bottom: 5px;">Std Dev</div>
+                                    <div style="font-size: 1.3rem; font-weight: bold; color: #e74c3c;">$${(result.loss_statistics.std / 1000000).toFixed(2)}M</div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div style="background: #ecf0f1; padding: 15px; border-radius: 8px; margin-bottom: 10px;">
+                                    <div style="font-size: 0.85rem; color: #7f8c8d; margin-bottom: 5px;">VaR (99%)</div>
+                                    <div style="font-size: 1.3rem; font-weight: bold; color: #e74c3c;">$${(result.loss_statistics.var_99 / 1000000).toFixed(2)}M</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div style="background: #ecf0f1; padding: 15px; border-radius: 8px; margin-bottom: 10px;">
+                                    <div style="font-size: 0.85rem; color: #7f8c8d; margin-bottom: 5px;">5th Percentile</div>
+                                    <div style="font-size: 1.3rem; font-weight: bold;">$${(result.loss_statistics.percentile_5 / 1000000).toFixed(2)}M</div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div style="background: #ecf0f1; padding: 15px; border-radius: 8px; margin-bottom: 10px;">
+                                    <div style="font-size: 0.85rem; color: #7f8c8d; margin-bottom: 5px;">95th Percentile</div>
+                                    <div style="font-size: 1.3rem; font-weight: bold;">$${(result.loss_statistics.percentile_95 / 1000000).toFixed(2)}M</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <h6 style="color: #27ae60; margin-bottom: 10px;">💚 Profit Statistics</h6>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div style="background: #ecf0f1; padding: 15px; border-radius: 8px; margin-bottom: 10px;">
+                                    <div style="font-size: 0.85rem; color: #7f8c8d; margin-bottom: 5px;">Mean Profit</div>
+                                    <div style="font-size: 1.3rem; font-weight: bold; color: #27ae60;">$${(result.profit_statistics.mean / 1000000).toFixed(2)}M</div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div style="background: #ecf0f1; padding: 15px; border-radius: 8px; margin-bottom: 10px;">
+                                    <div style="font-size: 0.85rem; color: #7f8c8d; margin-bottom: 5px;">5th Percentile</div>
+                                    <div style="font-size: 1.3rem; font-weight: bold;">$${(result.profit_statistics.percentile_5 / 1000000).toFixed(2)}M</div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div style="background: #ecf0f1; padding: 15px; border-radius: 8px; margin-bottom: 10px;">
+                                    <div style="font-size: 0.85rem; color: #7f8c8d; margin-bottom: 5px;">Probability of Loss</div>
+                                    <div style="font-size: 1.3rem; font-weight: bold; color: #27ae60;">${(result.profit_statistics.probability_loss * 100).toFixed(1)}%</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Interest Rate Stress Results
+            if (result.lob_impacts) {
+                html += `<div style="margin-bottom: 20px;"><h6 style="color: #3498db; margin-bottom: 10px;">🏢 Line of Business Impacts</h6>`;
+                for (const [lob, impacts] of Object.entries(result.lob_impacts)) {
+                    html += `
+                        <div style="background: #ecf0f1; padding: 12px; border-radius: 8px; margin-bottom: 10px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div style="font-weight: 600; color: #2c3e50;">${lob}</div>
+                                <div>
+                                    <span style="background: #3498db; color: white; padding: 3px 10px; border-radius: 5px; font-size: 0.85rem; margin-right: 5px;">Capital: $${(impacts.capital_impact / 1000).toFixed(0)}K</span>
+                                    <span style="background: #9b59b6; color: white; padding: 3px 10px; border-radius: 5px; font-size: 0.85rem;">${impacts.pct_change > 0 ? '+' : ''}${impacts.pct_change.toFixed(1)}%</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+                if (result.total_capital_impact !== undefined) {
+                    html += `
+                        <div style="background: #2c3e50; color: white; padding: 15px; border-radius: 8px; margin-top: 10px; text-align: center;">
+                            <div style="font-size: 0.9rem; opacity: 0.8; margin-bottom: 5px;">Total Capital Impact</div>
+                            <div style="font-size: 1.5rem; font-weight: bold;">$${(result.total_capital_impact / 1000000).toFixed(2)}M</div>
+                        </div>
+                    `;
+                }
+                html += `</div>`;
+            }
+
+            // Catastrophe Event Results
+            if (result.event) {
+                html += `
+                    <div style="margin-bottom: 20px;">
+                        <h6 style="color: #e74c3c; margin-bottom: 10px;">🌪️ Catastrophe Event Details</h6>
+                        <div style="background: #ecf0f1; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                            <div style="margin-bottom: 10px;"><strong>Event:</strong> ${result.event}</div>
+                            <div style="margin-bottom: 10px;"><strong>Exposed Premium:</strong> $${(result.exposed_premium / 1000000).toFixed(2)}M</div>
+                            <div style="margin-bottom: 10px;"><strong>Estimated Loss:</strong> $${(result.estimated_loss / 1000000).toFixed(2)}M</div>
+                            <div style="margin-bottom: 10px;"><strong>Capital Impact:</strong> $${(result.impact_on_capital / 1000000).toFixed(2)}M</div>
+                            <div style="margin-bottom: 10px;"><strong>Portfolio Impact:</strong> ${result.portfolio_impact.toFixed(2)}%</div>
+                            <div><strong>Treaties Affected:</strong> ${result.treaties_affected}</div>
+                        </div>
+                        ${result.recovery_actions && result.recovery_actions.length > 0 ? '<h6 style="color: #27ae60; margin-top: 15px; margin-bottom: 10px;">✅ Recovery Actions</h6>' : ''}
+                        ${result.recovery_actions && result.recovery_actions.length > 0 ? result.recovery_actions.map(action => `
+                            <div style="background: #d5f4e6; padding: 10px; border-radius: 8px; margin-bottom: 8px; border-left: 3px solid #27ae60;">
+                                <strong style="color: #27ae60;">→</strong> ${action}
+                            </div>
+                        `).join('') : ''}
+                    </div>
+                `;
+            }
+
+            // Scenario Comparison Results
+            if (result.scenarios && Array.isArray(result.scenarios)) {
+                html += `
+                    <div style="margin-bottom: 20px;">
+                        <h6 style="color: #8e44ad; margin-bottom: 10px;">📊 Scenario Comparison</h6>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px;">
+                `;
+                
+                result.scenarios.forEach(scenario => {
+                    const profitColor = scenario.expected_profit >= 0 ? '#27ae60' : '#e74c3c';
+                    html += `
+                        <div style="background: #ecf0f1; padding: 15px; border-radius: 8px; border-left: 4px solid ${profitColor};">
+                            <div style="font-weight: 600; color: #2c3e50; margin-bottom: 10px;">${scenario.name}</div>
+                            <div style="font-size: 0.85rem; color: #7f8c8d; margin-bottom: 10px;">${scenario.description}</div>
+                            <div style="margin-bottom: 5px;">
+                                <strong style="font-size: 0.9rem;">Expected Profit:</strong>
+                                <div style="font-size: 1.1rem; font-weight: bold; color: ${profitColor};">$${(scenario.expected_profit / 1000000).toFixed(2)}M</div>
+                            </div>
+                            <div style="margin-bottom: 5px;">
+                                <strong style="font-size: 0.9rem;">Capital Required:</strong>
+                                <div style="font-size: 1rem; font-weight: bold; color: #3498db;">$${(scenario.capital_required / 1000000).toFixed(2)}M</div>
+                            </div>
+                            <div style="margin-bottom: 5px;">
+                                <strong style="font-size: 0.9rem;">RORAC:</strong>
+                                <div style="font-size: 1rem; font-weight: bold; color: #9b59b6;">${typeof scenario.rorac === 'number' && scenario.rorac < 0 ? scenario.rorac.toFixed(1) : scenario.rorac.toFixed(1)}%</div>
+                            </div>
+                            <div style="background: rgba(0,0,0,0.05); padding: 8px; border-radius: 5px; text-align: center; font-size: 0.85rem;">
+                                <strong>Probability:</strong> ${(scenario.probability * 100).toFixed(0)}%
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += `</div>`;
+                
+                // Weighted Outcome
+                if (result.expected_weighted_outcome) {
+                    html += `
+                        <div style="background: #2c3e50; color: white; padding: 20px; border-radius: 8px; margin-top: 15px;">
+                            <div style="font-weight: 600; margin-bottom: 15px; font-size: 1.1rem;">📈 Expected Weighted Outcome</div>
+                            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
+                                <div style="background: rgba(255,255,255,0.1); padding: 12px; border-radius: 6px; text-align: center;">
+                                    <div style="font-size: 0.85rem; opacity: 0.8; margin-bottom: 5px;">Expected Profit</div>
+                                    <div style="font-size: 1.3rem; font-weight: bold; color: #27ae60;">$${(result.expected_weighted_outcome.profit / 1000000).toFixed(2)}M</div>
+                                </div>
+                                <div style="background: rgba(255,255,255,0.1); padding: 12px; border-radius: 6px; text-align: center;">
+                                    <div style="font-size: 0.85rem; opacity: 0.8; margin-bottom: 5px;">Capital Required</div>
+                                    <div style="font-size: 1.3rem; font-weight: bold; color: #3498db;">$${(result.expected_weighted_outcome.capital / 1000000).toFixed(2)}M</div>
+                                </div>
+                                <div style="background: rgba(255,255,255,0.1); padding: 12px; border-radius: 6px; text-align: center;">
+                                    <div style="font-size: 0.85rem; opacity: 0.8; margin-bottom: 5px;">Expected RORAC</div>
+                                    <div style="font-size: 1.3rem; font-weight: bold; color: #9b59b6;">${result.expected_weighted_outcome.rorac.toFixed(1)}%</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                html += `</div>`;
+            }
+
+            html += `</div>`;
+            container.innerHTML = html;
+        }
+
+        function showToast(message, type) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast`;
+            toast.style.borderLeft = type === 'success' ? '4px solid #27ae60' : type === 'error' ? '4px solid #e74c3c' : '4px solid #3498db';
+            toast.textContent = message;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 4000);
+        }
+    </script>
+</body>
+</html>

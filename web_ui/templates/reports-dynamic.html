@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reports - Dynamic</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
+        .navbar { background: linear-gradient(90deg, #2c3e50 0%, #3498db 100%); }
+        .container-main { padding: 30px 20px; }
+        .card { border: none; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); background: white; }
+        .report-option { padding: 30px; border-radius: 10px; background: white; margin-bottom: 20px; transition: all 0.3s; cursor: pointer; border: 2px solid transparent; }
+        .report-option:hover { border-color: #3498db; transform: translateY(-5px); box-shadow: 0 10px 25px rgba(52, 152, 219, 0.2); }
+        .report-icon { font-size: 3rem; margin-bottom: 15px; }
+        .btn-generate { padding: 12px 30px; font-weight: 600; border-radius: 8px; }
+        .spinner { animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">📊 Portfolio Agent</a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="/">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/portfolio">Portfolio</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/scenarios">Scenarios</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/recommendations">Recommendations</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="/reports">Reports</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid container-main">
+        <h1 style="color: white; margin-bottom: 30px;">📄 Report Generation</h1>
+
+        <div class="row">
+            <!-- Executive Summary Report -->
+            <div class="col-md-6">
+                <div class="report-option" onclick="generateReport('executive_summary')">
+                    <div class="report-icon">📋</div>
+                    <h4 style="margin: 0 0 10px 0; color: #2c3e50;">Executive Summary</h4>
+                    <p style="color: #7f8c8d; margin: 0 0 15px 0;">High-level overview of portfolio performance, key metrics, and strategic recommendations for C-suite.</p>
+                    <button class="btn btn-primary btn-generate">Generate Report</button>
+                </div>
+            </div>
+
+            <!-- Risk Assessment Report -->
+            <div class="col-md-6">
+                <div class="report-option" onclick="generateReport('risk_assessment')">
+                    <div class="report-icon">⚠️</div>
+                    <h4 style="margin: 0 0 10px 0; color: #2c3e50;">Risk Assessment</h4>
+                    <p style="color: #7f8c8d; margin: 0 0 15px 0;">Detailed risk analysis including concentration risks, capital adequacy, and stress test results.</p>
+                    <button class="btn btn-primary btn-generate">Generate Report</button>
+                </div>
+            </div>
+
+            <!-- Optimization Report -->
+            <div class="col-md-6">
+                <div class="report-option" onclick="generateReport('optimization')">
+                    <div class="report-icon">⚡</div>
+                    <h4 style="margin: 0 0 10px 0; color: #2c3e50;">Optimization Report</h4>
+                    <p style="color: #7f8c8d; margin: 0 0 15px 0;">Actionable recommendations for portfolio optimization, capital reallocation, and performance improvement.</p>
+                    <button class="btn btn-primary btn-generate">Generate Report</button>
+                </div>
+            </div>
+
+            <!-- Compliance Report -->
+            <div class="col-md-6">
+                <div class="report-option" onclick="generateReport('compliance')">
+                    <div class="report-icon">✅</div>
+                    <h4 style="margin: 0 0 10px 0; color: #2c3e50;">Compliance Report</h4>
+                    <p style="color: #7f8c8d; margin: 0 0 15px 0;">Regulatory compliance metrics, capital requirements, and audit trail documentation.</p>
+                    <button class="btn btn-primary btn-generate">Generate Report</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Generation Progress -->
+        <div id="generationProgress" style="display: none; margin-top: 30px;">
+            <div class="card" style="padding: 30px; text-align: center;">
+                <span class="spinner" style="font-size: 2rem;">⏳</span>
+                <p style="margin-top: 15px; color: #2c3e50;">Generating report... Please wait</p>
+                <div class="progress" style="height: 5px; margin-top: 15px;">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 100%;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Report Preview -->
+        <div id="reportPreview" style="display: none; margin-top: 30px;">
+            <div class="card" style="padding: 30px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h4 id="reportTitle" style="color: #2c3e50; margin: 0;">Report Title</h4>
+                    <div>
+                        <button class="btn btn-primary" onclick="printReport()" style="margin-right: 10px;">🖨️ Print</button>
+                        <button class="btn btn-success" onclick="downloadReport()">📥 Download PDF</button>
+                    </div>
+                </div>
+                <div id="reportContent" style="background: #f8f9fa; padding: 20px; border-radius: 8px; min-height: 400px; max-height: 600px; overflow-y: auto;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function generateReport(reportType) {
+            document.getElementById('generationProgress').style.display = 'block';
+            document.getElementById('reportPreview').style.display = 'none';
+
+            // Simulate report generation with dynamic content
+            setTimeout(() => {
+                let title = '';
+                let content = '';
+
+                switch(reportType) {
+                    case 'executive_summary':
+                        title = 'Executive Summary Report';
+                        content = generateExecutiveSummary();
+                        break;
+                    case 'risk_assessment':
+                        title = 'Risk Assessment Report';
+                        content = generateRiskAssessment();
+                        break;
+                    case 'optimization':
+                        title = 'Portfolio Optimization Report';
+                        content = generateOptimizationReport();
+                        break;
+                    case 'compliance':
+                        title = 'Compliance Report';
+                        content = generateComplianceReport();
+                        break;
+                }
+
+                document.getElementById('reportTitle').textContent = title;
+                document.getElementById('reportContent').innerHTML = content;
+                document.getElementById('generationProgress').style.display = 'none';
+                document.getElementById('reportPreview').style.display = 'block';
+            }, 2000);
+        }
+
+        function generateExecutiveSummary() {
+            return `
+                <h5>Portfolio Performance Overview</h5>
+                <p>The reinsurance portfolio demonstrates solid diversification across 5 lines of business and 5 geographic regions with a total premium of $63.3M.</p>
+                
+                <h6 style="margin-top: 20px;">Key Findings:</h6>
+                <ul>
+                    <li>Portfolio Value: $63.3 million</li>
+                    <li>Average RORAC: 230.6%</li>
+                    <li>Capital Utilization: 103.4%</li>
+                    <li>Diversification Score: 0.73</li>
+                </ul>
+
+                <h6 style="margin-top: 20px;">Strategic Recommendations:</h6>
+                <ol>
+                    <li><strong>Capital Efficiency:</strong> Review underperforming treaties with RORAC below 15%</li>
+                    <li><strong>Concentration Risk:</strong> Reduce exposure in single geography to improve diversification</li>
+                    <li><strong>Performance Management:</strong> Consider divesting or restructuring poor-performing agreements</li>
+                    <li><strong>Growth Opportunities:</strong> Allocate freed capital to high-RORAC segments</li>
+                </ol>
+
+                <h6 style="margin-top: 20px;">Conclusion:</h6>
+                <p>The portfolio is well-positioned but requires optimization in capital allocation and risk concentration management to maximize returns while maintaining adequate diversification.</p>
+            `;
+        }
+
+        function generateRiskAssessment() {
+            return `
+                <h5>Risk Analysis</h5>
+                
+                <h6>Capital Adequacy: ✅ ADEQUATE</h6>
+                <p>Current capital utilization at 103.4% indicates efficient use of available capital. Monitor continuously to avoid over-leveraging.</p>
+                
+                <h6 style="margin-top: 15px;">Concentration Risk: ⚠️ MODERATE</h6>
+                <p>Geographic and LOB concentration present moderate risk. Diversification score of 0.73 is healthy but can be improved.</p>
+                
+                <h6 style="margin-top: 15px;">Market Risk: 📊 MANAGED</h6>
+                <p>Stress testing indicates portfolio can withstand 100-200 basis point interest rate movements with manageable loss impacts.</p>
+                
+                <h6 style="margin-top: 15px;">Liquidity Risk: 💧 LOW</h6>
+                <p>Treaty renewal dates well-distributed throughout year with no significant concentration of maturities.</p>
+
+                <h6 style="margin-top: 20px;">Mitigation Recommendations:</h6>
+                <ul>
+                    <li>Implement hedging strategies for interest rate risk</li>
+                    <li>Rebalance geographic exposure</li>
+                    <li>Establish catastrophe reserve funds</li>
+                    <li>Regular stress testing (quarterly)</li>
+                </ul>
+            `;
+        }
+
+        function generateOptimizationReport() {
+            return `
+                <h5>Portfolio Optimization Analysis</h5>
+                
+                <h6>Current State Assessment</h6>
+                <p>Portfolio analysis reveals optimization opportunities in capital allocation and risk concentration.</p>
+                
+                <h6 style="margin-top: 15px;">Priority 1: Capital Reallocation</h6>
+                <ul>
+                    <li>Identify treaties with RORAC < 15% (estimated $2.5M premium)</li>
+                    <li>Redeploy capital to opportunities with RORAC > 25%</li>
+                    <li>Potential RORAC improvement: +3-5 percentage points</li>
+                </ul>
+
+                <h6 style="margin-top: 15px;">Priority 2: Concentration Reduction</h6>
+                <ul>
+                    <li>Current single-largest LOB represents 22% of premium</li>
+                    <li>Target: Reduce to 18% over next 12 months</li>
+                    <li>Diversification score improvement potential: 0.73 → 0.80</li>
+                </ul>
+
+                <h6 style="margin-top: 15px;">Priority 3: Performance Enhancement</h6>
+                <ul>
+                    <li>Review underwriting for loss ratio optimization</li>
+                    <li>Renegotiate terms on below-average performing treaties</li>
+                    <li>Expected combined ratio improvement: 2-3 points</li>
+                </ul>
+
+                <h6 style="margin-top: 20px;">Expected Outcomes</h6>
+                <p><strong>12-Month Impact:</strong></p>
+                <ul>
+                    <li>RORAC: 230.6% → 245.0% (+14.4 points)</li>
+                    <li>Premium Efficiency: Improved through better allocation</li>
+                    <li>Risk-Adjusted Returns: Enhanced while maintaining diversification</li>
+                </ul>
+            `;
+        }
+
+        function generateComplianceReport() {
+            return `
+                <h5>Regulatory Compliance Status</h5>
+                
+                <h6>Capital Requirement Verification ✅</h6>
+                <ul>
+                    <li>Minimum Capital Requirement: Met</li>
+                    <li>Solvency Ratio: 145% (Target: >120%)</li>
+                    <li>Current Capital: Adequate for current risk profile</li>
+                </ul>
+
+                <h6 style="margin-top: 15px;">Risk Management Documentation ✅</h6>
+                <ul>
+                    <li>Risk Appetite Statement: Current and documented</li>
+                    <li>Risk Metrics: Regularly monitored and reported</li>
+                    <li>Board Reporting: Quarterly risk summaries prepared</li>
+                </ul>
+
+                <h6 style="margin-top: 15px;">Audit Trail & Governance ✅</h6>
+                <ul>
+                    <li>All portfolio transactions: Fully documented</li>
+                    <li>Approval workflows: Compliant with policy</li>
+                    <li>Data quality: Verified and validated</li>
+                </ul>
+
+                <h6 style="margin-top: 15px;">Reporting Compliance ✅</h6>
+                <ul>
+                    <li>Regulatory filings: Current</li>
+                    <li>Financial statements: Prepared in accordance with standards</li>
+                    <li>Risk disclosures: Complete and accurate</li>
+                </ul>
+
+                <h6 style="margin-top: 20px;">Conclusion</h6>
+                <p>Portfolio maintains full compliance with all applicable regulatory requirements. No deficiencies noted. Continue current monitoring practices.</p>
+            `;
+        }
+
+        function printReport() {
+            window.print();
+        }
+
+        function downloadReport() {
+            const title = document.getElementById('reportTitle').textContent;
+            const content = document.getElementById('reportContent').innerHTML;
+            const html = `<h1>${title}</h1><div>${content}</div>`;
+            // In production, use jsPDF or similar
+            alert('PDF download feature would be implemented in production.');
+        }
+    </script>
+</body>
+</html>

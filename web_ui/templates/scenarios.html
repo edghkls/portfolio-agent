@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scenario Analysis</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    <style>
+        :root {
+            --primary-color: #003d82;
+        }
+        body { background-color: #f8f9fa; }
+        .navbar { background: linear-gradient(135deg, var(--primary-color) 0%, #005fa3 100%); }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">📊 Portfolio Agent</a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="/">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/portfolio">Portfolio</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="/scenarios">Scenarios</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid p-4">
+        <h1 style="color: var(--primary-color); margin-bottom: 30px;">Scenario Analysis</h1>
+
+        <div class="row mb-4">
+            <div class="col-lg-12">
+                <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.08);">
+                    <h5 style="color: var(--primary-color); font-weight: 600; margin-bottom: 20px;">Run Scenario Simulation</h5>
+                    
+                    <form id="scenarioForm">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label>Scenario Type</label>
+                                <select class="form-select" id="scenarioType" required>
+                                    <option value="">-- Select Scenario --</option>
+                                    <option value="monte_carlo">Monte Carlo Simulation</option>
+                                    <option value="interest_rate">Interest Rate Stress</option>
+                                    <option value="catastrophe">Catastrophe Event</option>
+                                    <option value="comparison">Scenario Comparison</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6" id="paramContainer"></div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Run Simulation</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-12">
+                <div id="resultsContainer"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('scenarioType').addEventListener('change', function() {
+            const paramContainer = document.getElementById('paramContainer');
+            
+            switch(this.value) {
+                case 'monte_carlo':
+                    paramContainer.innerHTML = `
+                        <label>Number of Simulations</label>
+                        <input type="number" class="form-control" id="simulations" value="1000" min="100" max="10000">
+                    `;
+                    break;
+                case 'interest_rate':
+                    paramContainer.innerHTML = `
+                        <label>Rate Change (basis points)</label>
+                        <input type="number" class="form-control" id="rateChange" value="50" min="-500" max="500">
+                    `;
+                    break;
+                case 'catastrophe':
+                    paramContainer.innerHTML = `
+                        <label>Return Period (years)</label>
+                        <select class="form-select" id="returnPeriod">
+                            <option value="100">100-year</option>
+                            <option value="200" selected>200-year</option>
+                            <option value="500">500-year</option>
+                        </select>
+                    `;
+                    break;
+                default:
+                    paramContainer.innerHTML = '';
+            }
+        });
+
+        document.getElementById('scenarioForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const scenarioType = document.getElementById('scenarioType').value;
+            const payload = { simulation_type: scenarioType };
+
+            if (scenarioType === 'monte_carlo') {
+                payload.simulations = parseInt(document.getElementById('simulations').value);
+            } else if (scenarioType === 'interest_rate') {
+                payload.rate_change = parseInt(document.getElementById('rateChange').value);
+            } else if (scenarioType === 'catastrophe') {
+                payload.return_period = parseInt(document.getElementById('returnPeriod').value);
+            }
+
+            try {
+                const response = await fetch('/api/scenario/simulate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                const results = await response.json();
+                displayResults(results);
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        });
+
+        function displayResults(results) {
+            const container = document.getElementById('resultsContainer');
+            let html = '';
+
+            // Monte Carlo Results
+            if (results.loss_statistics) {
+                html = `
+                    <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.08); margin-top: 20px;">
+                        <h5 style="color: var(--primary-color); margin-bottom: 20px;">📊 Monte Carlo Simulation Results</h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div style="background: #f0f7ff; padding: 15px; border-radius: 5px; margin-bottom: 10px;">
+                                    <h6 style="color: var(--primary-color); margin-bottom: 10px;">Loss Statistics</h6>
+                                    <p><strong>Mean Loss:</strong> $${(results.loss_statistics.mean / 1e6).toFixed(2)}M</p>
+                                    <p><strong>Std Dev:</strong> $${(results.loss_statistics.std / 1e6).toFixed(2)}M</p>
+                                    <p><strong>99th Percentile (VaR):</strong> $${(results.loss_statistics.var_99 / 1e6).toFixed(2)}M</p>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div style="background: #f0fff0; padding: 15px; border-radius: 5px; margin-bottom: 10px;">
+                                    <h6 style="color: #27ae60; margin-bottom: 10px;">Profit Statistics</h6>
+                                    <p><strong>Mean Profit:</strong> $${(results.profit_statistics.mean / 1e6).toFixed(2)}M</p>
+                                    <p><strong>Std Dev:</strong> $${(results.profit_statistics.std / 1e6).toFixed(2)}M</p>
+                                    <p><strong>Probability of Loss:</strong> ${results.profit_statistics.probability_loss.toFixed(1)}%</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Catastrophe Event Results
+            else if (results.event) {
+                html = `
+                    <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.08); margin-top: 20px;">
+                        <h5 style="color: var(--primary-color); margin-bottom: 20px;">⚠️ Catastrophe Stress Test Results</h5>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div style="background: #fff3cd; padding: 15px; border-radius: 5px; margin-bottom: 10px; border-left: 4px solid #ff6b6b;">
+                                    <p style="margin: 0;"><strong>Event:</strong></p>
+                                    <p style="margin: 5px 0 0 0; font-size: 14px;">${results.event}</p>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div style="background: #f0f7ff; padding: 15px; border-radius: 5px; margin-bottom: 10px; border-left: 4px solid #003d82;">
+                                    <p style="margin: 0;"><strong>Estimated Loss:</strong></p>
+                                    <p style="margin: 5px 0 0 0; font-size: 18px; font-weight: bold; color: #d9534f;">$${(results.estimated_loss / 1e6).toFixed(2)}M</p>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div style="background: #f0fff0; padding: 15px; border-radius: 5px; margin-bottom: 10px; border-left: 4px solid #27ae60;">
+                                    <p style="margin: 0;"><strong>Impact on Capital:</strong></p>
+                                    <p style="margin: 5px 0 0 0; font-size: 14px;">${(results.impact_on_capital / 1e6).toFixed(2)}M</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row" style="margin-top: 15px;">
+                            <div class="col-md-6">
+                                <p><strong>Exposed Premium:</strong> $${(results.exposed_premium / 1e6).toFixed(2)}M</p>
+                                <p><strong>Portfolio Impact:</strong> ${results.portfolio_impact.toFixed(1)}%</p>
+                                <p><strong>Treaties Affected:</strong> ${results.treaties_affected}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <div style="background: #f9f9f9; padding: 10px; border-radius: 5px;">
+                                    <strong>Recovery Actions:</strong>
+                                    <ul style="margin: 10px 0 0 0; padding-left: 20px;">
+                                        ${results.recovery_actions.map(action => `<li style="margin: 5px 0;">${action}</li>`).join('')}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Interest Rate Stress Results
+            else if (results.lob_impacts) {
+                html = `
+                    <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.08); margin-top: 20px;">
+                        <h5 style="color: var(--primary-color); margin-bottom: 20px;">📈 Interest Rate Stress Test Results</h5>
+                        <div style="background: #fff3cd; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+                            <p><strong>Scenario:</strong> ${results.scenario}</p>
+                            <p><strong>Total Capital Impact:</strong> <span style="color: ${results.total_capital_impact > 0 ? '#27ae60' : '#d9534f'}; font-weight: bold;">$${(results.total_capital_impact / 1e6).toFixed(2)}M</span></p>
+                            <p><strong>Solvency Impact:</strong> ${results.solvency_impact}</p>
+                        </div>
+                        <div style="background: #f9f9f9; padding: 15px; border-radius: 5px;">
+                            <h6 style="color: var(--primary-color); margin-bottom: 15px;">Impact by Line of Business</h6>
+                            <div class="row">
+                                ${Object.entries(results.lob_impacts).map(([lob, impact]) => `
+                                    <div class="col-md-6 mb-3">
+                                        <div style="background: white; padding: 10px; border-radius: 5px; border-left: 3px solid #003d82;">
+                                            <p style="margin: 0; font-weight: bold;">${lob}</p>
+                                            <p style="margin: 5px 0 0 0; font-size: 14px;">
+                                                Capital Impact: <strong>$${(impact.capital_impact / 1e6).toFixed(2)}M</strong><br>
+                                                % Change: <strong>${impact.pct_change.toFixed(2)}%</strong>
+                                            </p>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Scenario Comparison Results
+            else if (results.scenarios) {
+                html = `
+                    <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.08); margin-top: 20px;">
+                        <h5 style="color: var(--primary-color); margin-bottom: 20px;">🔄 Scenario Comparison Results</h5>
+                        <div style="overflow-x: auto;">
+                            <table class="table table-striped">
+                                <thead style="background-color: #f0f7ff;">
+                                    <tr>
+                                        <th>Scenario</th>
+                                        <th>Expected Profit</th>
+                                        <th>Capital Required</th>
+                                        <th>RORAC</th>
+                                        <th>Probability</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${results.scenarios.map(scenario => `
+                                        <tr>
+                                            <td><strong>${scenario.name}</strong></td>
+                                            <td>$${(scenario.expected_profit / 1e6).toFixed(2)}M</td>
+                                            <td>$${(scenario.capital_required / 1e6).toFixed(2)}M</td>
+                                            <td>${scenario.rorac.toFixed(1)}%</td>
+                                            <td>${(scenario.probability * 100).toFixed(0)}%</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Default fallback with better formatting
+            else {
+                html = `
+                    <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.08); margin-top: 20px;">
+                        <h5 style="color: var(--primary-color); margin-bottom: 20px;">📋 Simulation Results</h5>
+                        <div style="background: #f9f9f9; padding: 15px; border-radius: 5px; font-family: monospace; white-space: pre-wrap; word-break: break-word; max-height: 400px; overflow-y: auto;">
+${JSON.stringify(results, null, 2).split('\n').map(line => `<div>${line}</div>`).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            container.innerHTML = html;
+        }
+    </script>
+</body>
+</html>
