@@ -33,6 +33,15 @@
                     <li class="nav-item"><a class="nav-link" href="/">Dashboard</a></li>
                     <li class="nav-item"><a class="nav-link active" href="/portfolio">Portfolio</a></li>
                     <li class="nav-item"><a class="nav-link" href="/scenarios">Scenarios</a></li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="analyticsDropdown" role="button" data-bs-toggle="dropdown">📊 Analytics</a>
+                        <ul class="dropdown-menu" aria-labelledby="analyticsDropdown">
+                            <li><a class="dropdown-item" href="/data-aggregation">📋 Data Aggregation</a></li>
+                            <li><a class="dropdown-item" href="/portfolio-health">🏥 Portfolio Health</a></li>
+                            <li><a class="dropdown-item" href="/risk-return-optimization">⚖️ Risk-Return Optimization</a></li>
+                            <li><a class="dropdown-item" href="/deal-impact">💼 Deal Impact</a></li>
+                        </ul>
+                    </li>
                     <li class="nav-item"><a class="nav-link" href="/recommendations">Recommendations</a></li>
                     <li class="nav-item"><a class="nav-link" href="/reports">Reports</a></li>
                 </ul>
@@ -102,25 +111,30 @@
                 return;
             }
 
-            container.innerHTML = treaties.map(t => `
+            container.innerHTML = treaties.map(t => {
+                // Determine performance status based on RORAC
+                let status = 'adequate';
+                if (t.rorac > 250) status = 'excellent';
+                else if (t.rorac < 180) status = 'poor';
+                
+                return `
                 <div class="treaty-card">
                     <div style="display: flex; justify-content: space-between; align-items: start;">
                         <div>
-                            <h5 style="margin: 0 0 10px 0;">${t.treaty_id} - ${t.lob}</h5>
+                            <h5 style="margin: 0 0 10px 0;">${t.id} - ${t.lob}</h5>
                             <p style="margin: 0; color: #7f8c8d; font-size: 0.9rem;">📍 ${t.geography}</p>
                         </div>
-                        <span class="status-badge status-${(t.performance_status || 'adequate').toLowerCase()}">${t.performance_status || 'Adequate'}</span>
+                        <span class="status-badge status-${status}">${status.charAt(0).toUpperCase() + status.slice(1)}</span>
                     </div>
                     <div style="margin-top: 15px; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px;">
                         <div class="metric-badge">💰 Premium: $${(t.premium/1000).toFixed(0)}K</div>
                         <div class="metric-badge">📊 RORAC: ${t.rorac.toFixed(1)}%</div>
                         <div class="metric-badge">📈 Loss Ratio: ${t.loss_ratio.toFixed(1)}%</div>
                         <div class="metric-badge">💵 Expected Profit: $${(t.expected_profit/1000).toFixed(0)}K</div>
-                        <div class="metric-badge">🎯 Rating: ${t.rating}</div>
-                        <div class="metric-badge">👤 Underwriter: ${t.underwriter}</div>
                     </div>
                 </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
         function populateFilters(data) {
@@ -152,7 +166,11 @@
             fetch('/api/filters/update', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ lob: lob || null, geography: geo || null })
+                body: JSON.stringify({ 
+                    lob: lob || null, 
+                    geography: geo || null,
+                    sort: sort
+                })
             })
             .then(r => r.json())
             .then(() => loadTreaties())

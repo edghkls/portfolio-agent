@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio Health Analysis</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #003d82;
+            --accent-color: #ff6b35;
+            --success-color: #06a77d;
+            --warning-color: #ffd23f;
+            --danger-color: #d62828;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+        }
+        
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #005fa3 100%);
+            margin-bottom: 30px;
+        }
+        
+        .health-scorecard {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .health-score {
+            font-size: 3rem;
+            font-weight: 700;
+            margin: 20px 0;
+        }
+        
+        .health-score.excellent { color: #06a77d; }
+        .health-score.good { color: #003d82; }
+        .health-score.fair { color: var(--warning-color); }
+        .health-score.poor { color: #d62828; }
+        
+        .metric-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .metric-label {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 8px;
+        }
+        
+        .metric-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+        
+        .chart-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            position: relative;
+            height: 400px;
+        }
+        
+        .risk-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            border-left: 4px solid #ff6b35;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .risk-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+        
+        .risk-badge.high { background: #d62828; color: white; }
+        .risk-badge.medium { background: var(--warning-color); color: #333; }
+        .risk-badge.low { background: #06a77d; color: white; }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+        
+        .status-badge.excellent { background: #d4edda; color: #155724; }
+        .status-badge.good { background: #d1ecf1; color: #0c5460; }
+        .status-badge.fair { background: #fff3cd; color: #856404; }
+        .status-badge.poor { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">📊 Portfolio Manager</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="/">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/portfolio">Portfolio</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/scenarios">Scenarios</a></li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle active" href="#" id="analyticsDropdown" role="button" data-bs-toggle="dropdown">📊 Analytics</a>
+                        <ul class="dropdown-menu" aria-labelledby="analyticsDropdown">
+                            <li><a class="dropdown-item" href="/data-aggregation">📋 Data Aggregation</a></li>
+                            <li><a class="dropdown-item active" href="/portfolio-health">🏥 Portfolio Health</a></li>
+                            <li><a class="dropdown-item" href="/risk-return-optimization">⚖️ Risk-Return Optimization</a></li>
+                            <li><a class="dropdown-item" href="/deal-impact">💼 Deal Impact</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <!-- Health Scorecard -->
+        <div class="health-scorecard">
+            <h1>🏥 Portfolio Health & Composition Analysis</h1>
+            <div class="health-score" id="healthScore">--</div>
+            <span class="status-badge" id="healthStatus">Loading...</span>
+            <p class="text-muted mt-3">Overall portfolio composition and performance metrics</p>
+            <button class="btn btn-primary" onclick="refreshAnalysis()">🔄 Refresh Analysis</button>
+        </div>
+
+        <!-- Key Metrics -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="metric-card">
+                    <div class="metric-label">Combined Ratio</div>
+                    <div class="metric-value" id="combinedRatio">--</div>
+                    <small class="text-muted">Lower is better (Target: &lt;95%)</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="metric-card">
+                    <div class="metric-label">Expected Loss Ratio</div>
+                    <div class="metric-value" id="lossRatio">--</div>
+                    <small class="text-muted">Average across portfolio</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="metric-card">
+                    <div class="metric-label">Return on Capital</div>
+                    <div class="metric-value" id="returnCapital">--</div>
+                    <small class="text-muted">Target RORAC &gt; 200%</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="metric-card">
+                    <div class="metric-label">Diversification Score</div>
+                    <div class="metric-value" id="diversificationScore">--</div>
+                    <small class="text-muted">0.0 to 1.0 (Higher = Better)</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Premium Mix Section -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="chart-container">
+                    <canvas id="premiumMixChart"></canvas>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="metric-card">
+                    <h5>📊 Premium Mix by Segment</h5>
+                    <div id="premiumMixDetails" style="margin-top: 15px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Portfolio Metrics -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="chart-container">
+                    <canvas id="performanceMetricsChart"></canvas>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="chart-container">
+                    <canvas id="capitalUtilizationChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Risk Assessment -->
+        <div class="section">
+            <h4 class="mb-3">⚠️ Key Portfolio Risks</h4>
+            <div id="riskAssessment"></div>
+        </div>
+
+        <!-- Health Status Details -->
+        <div class="section mt-4">
+            <h4 class="mb-3">📋 Portfolio Composition Summary</h4>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="metric-card">
+                        <h6>Capital Utilization</h6>
+                        <div id="capitalUtilSummary"></div>
+                        <div class="progress mt-3">
+                            <div class="progress-bar" id="capitalUtilBar" role="progressbar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="metric-card">
+                        <h6>Concentration Level</h6>
+                        <div id="concentrationLevel"></div>
+                        <p class="text-muted mt-2"><small>Based on diversification score and LOB spread</small></p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="metric-card">
+                        <h6>Performance Trend</h6>
+                        <div id="performanceTrend"></div>
+                        <p class="text-muted mt-2"><small>RORAC trajectory assessment</small></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let healthData = null;
+        let premiumChart = null;
+        let metricsChart = null;
+        let capitalChart = null;
+
+        async function refreshAnalysis() {
+            try {
+                const response = await fetch('/api/portfolio-health');
+                healthData = await response.json();
+                displayHealthMetrics();
+                displayPremiumMix();
+                displayPerformanceMetrics();
+                displayCapitalUtilization();
+                displayRiskAssessment();
+            } catch (error) {
+                console.error('Error loading health analysis:', error);
+                alert('Error loading portfolio health data');
+            }
+        }
+
+        function displayHealthMetrics() {
+            if (!healthData) return;
+            
+            const scoreClass = healthData.health_status.toLowerCase();
+            document.getElementById('healthScore').textContent = healthData.health_score.toFixed(0);
+            document.getElementById('healthScore').className = `health-score ${scoreClass}`;
+            document.getElementById('healthStatus').textContent = healthData.health_status;
+            document.getElementById('healthStatus').className = `status-badge ${scoreClass}`;
+            
+            document.getElementById('combinedRatio').textContent = healthData.combined_ratio.toFixed(1) + '%';
+            document.getElementById('lossRatio').textContent = healthData.expected_loss_ratio.toFixed(1) + '%';
+            document.getElementById('returnCapital').textContent = healthData.return_on_capital.toFixed(1) + '%';
+            document.getElementById('diversificationScore').textContent = healthData.diversification_score.toFixed(2);
+        }
+
+        function displayPremiumMix() {
+            if (!healthData || !healthData.premium_mix) return;
+            
+            // Mix details
+            const mixDetails = Object.entries(healthData.premium_mix).map(([lob, pct]) => 
+                `<p>${lob}: <strong>${pct.toFixed(1)}%</strong></p>`
+            ).join('');
+            document.getElementById('premiumMixDetails').innerHTML = mixDetails;
+
+            // Chart - only if Chart.js is loaded
+            if (typeof Chart === 'undefined') return;
+            
+            const ctx = document.getElementById('premiumMixChart').getContext('2d');
+            if (premiumChart) premiumChart.destroy();
+            
+            premiumChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(healthData.premium_mix),
+                    datasets: [{
+                        data: Object.values(healthData.premium_mix),
+                        backgroundColor: ['#003d82', '#005fa3', '#ff6b35', '#06a77d', '#ffd23f']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            });
+        }
+
+        function displayPerformanceMetrics() {
+            if (typeof Chart === 'undefined') return;
+            
+            const ctx = document.getElementById('performanceMetricsChart').getContext('2d');
+            if (metricsChart) metricsChart.destroy();
+            
+            metricsChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Combined Ratio', 'Loss Ratio', 'Expense %'],
+                    datasets: [{
+                        label: 'Performance Metrics (%)',
+                        data: [
+                            healthData.combined_ratio,
+                            healthData.expected_loss_ratio,
+                            healthData.combined_ratio - healthData.expected_loss_ratio
+                        ],
+                        backgroundColor: '#003d82'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: true, max: 100 } }
+                }
+            });
+        }
+
+        function displayCapitalUtilization() {
+            const capUtil = healthData.capital_utilization;
+            document.getElementById('capitalUtilSummary').innerHTML = 
+                `<div class="metric-value" style="font-size: 1.5rem;">${capUtil.toFixed(1)}%</div>
+                 <small class="text-muted">Target: 75-95%</small>`;
+            
+            const bar = document.getElementById('capitalUtilBar');
+            bar.style.width = Math.min(capUtil, 100) + '%';
+            bar.className = capUtil < 75 ? 'progress-bar bg-warning' : capUtil > 100 ? 'progress-bar bg-danger' : 'progress-bar bg-success';
+            
+            // Concentration level
+            const diversif = healthData.diversification_score;
+            const concentration = diversif > 0.8 ? 'Low (Well-Diversified)' : 
+                                 diversif > 0.7 ? 'Medium' : 'High (Concentrated)';
+            document.getElementById('concentrationLevel').innerHTML = 
+                `<div class="metric-value" style="font-size: 1.2rem;">${concentration}</div>`;
+            
+            // Performance trend
+            const rorac = healthData.return_on_capital;
+            const trend = rorac > 220 ? '📈 Improving' : rorac > 180 ? '➡️ Stable' : '📉 Under pressure';
+            document.getElementById('performanceTrend').innerHTML = 
+                `<div class="metric-value" style="font-size: 1.2rem;">${trend}</div>`;
+
+            // Capital chart - only if Chart.js is loaded
+            if (typeof Chart === 'undefined') return;
+
+            const ctx = document.getElementById('capitalUtilizationChart').getContext('2d');
+            if (capitalChart) capitalChart.destroy();
+            
+            capitalChart = new Chart(ctx, {
+                type: 'gauge',
+                data: {
+                    datasets: [{
+                        value: capUtil,
+                        data: [0, 100]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    circumference: 180,
+                    rotation: 270,
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+
+        function displayRiskAssessment() {
+            if (!healthData || !healthData.key_risks) return;
+            
+            const riskHtml = healthData.key_risks.map(risk => `
+                <div class="risk-item">
+                    <div>
+                        <h6>${risk.risk}</h6>
+                        <p class="text-muted" style="font-size: 0.9rem; margin: 0;">${risk.description}</p>
+                    </div>
+                    <span class="risk-badge ${risk.level.toLowerCase()}">${risk.level}</span>
+                </div>
+            `).join('');
+            
+            document.getElementById('riskAssessment').innerHTML = riskHtml;
+        }
+
+        // Initialize on page load - wait for Chart.js to load
+        function initializePageWhenReady() {
+            if (typeof Chart !== 'undefined') {
+                refreshAnalysis();
+            } else {
+                setTimeout(initializePageWhenReady, 100);
+            }
+        }
+        setTimeout(initializePageWhenReady, 500);
+    </script>
+</body>
+</html>

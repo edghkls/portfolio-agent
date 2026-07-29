@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Portfolio Optimisation Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    <style>
+        :root {
+            --primary-color: #003d82;
+            --accent-color: #ff6b35;
+            --success-color: #06a77d;
+            --warning-color: #ffd23f;
+            --danger-color: #d62828;
+            --info-color: #3498db;
+            --secondary-color: #9b59b6;
+        }
+        
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #005fa3 100%);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.3rem;
+            letter-spacing: 0.5px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f9fbfc 100%);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+            border: 1px solid #e8ecf1;
+            border-left: 3px solid var(--primary-color);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: -30px;
+            width: 80px;
+            height: 80px;
+            background: radial-gradient(circle, rgba(0,61,130,0.03) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+            border-color: var(--primary-color);
+        }
+        
+        .stat-card h6 {
+            color: #555;
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+            font-weight: 700;
+        }
+        
+        .stat-card .value {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: var(--primary-color);
+            margin-bottom: 4px;
+            display: flex;
+            align-items: baseline;
+            gap: 4px;
+        }
+        
+        .stat-card .value small {
+            font-size: 0.65rem;
+            opacity: 0.7;
+        }
+        
+        .stat-card .trend {
+            font-size: 0.7rem;
+            font-weight: 600;
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: rgba(6, 168, 125, 0.15);
+            color: var(--success-color);
+            margin-top: 4px;
+        }
+        
+        .stat-card .trend.down {
+            background: rgba(214, 40, 40, 0.15);
+            color: var(--danger-color);
+        }
+        
+        .stat-card small {
+            font-size: 0.6rem;
+            display: block;
+            margin-top: 4px;
+        }
+        
+        .metric-gauge {
+            position: relative;
+            width: 100%;
+            height: 80px;
+            margin: 15px 0;
+        }
+        
+        .gauge-circle {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: conic-gradient(var(--primary-color) var(--gauge-value), #e8ecf1 0);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 5px auto;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08) inset;
+        }
+        
+        .gauge-text {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+        
+        .stat-card.accent { border-left-color: var(--accent-color); }
+        .stat-card.accent .value { color: var(--accent-color); }
+        .stat-card.accent .gauge-circle { background: conic-gradient(var(--accent-color) var(--gauge-value), #f0f0f0 0); }
+        .stat-card.accent .gauge-text { color: var(--accent-color); }
+        
+        .stat-card.success { border-left-color: var(--success-color); }
+        .stat-card.success .value { color: var(--success-color); }
+        .stat-card.success .gauge-circle { background: conic-gradient(var(--success-color) var(--gauge-value), #f0f0f0 0); }
+        .stat-card.success .gauge-text { color: var(--success-color); }
+        
+        .stat-card.warning { border-left-color: #ff6b35; }
+        .stat-card.warning .value { color: #ff6b35; }
+        .stat-card.warning .gauge-circle { background: conic-gradient(#ff6b35 var(--gauge-value), #f0f0f0 0); }
+        .stat-card.warning .gauge-text { color: #ff6b35; }
+        
+        .stat-card.info { border-left-color: var(--info-color); }
+        .stat-card.info .value { color: var(--info-color); }
+        .stat-card.info .gauge-circle { background: conic-gradient(var(--info-color) var(--gauge-value), #f0f0f0 0); }
+        .stat-card.info .gauge-text { color: var(--info-color); }
+        
+        .stat-card.secondary { border-left-color: var(--secondary-color); }
+        .stat-card.secondary .value { color: var(--secondary-color); }
+        .stat-card.secondary .gauge-circle { background: conic-gradient(var(--secondary-color) var(--gauge-value), #f0f0f0 0); }
+        .stat-card.secondary .gauge-text { color: var(--secondary-color); }
+        
+        .chart-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+            margin-bottom: 20px;
+            height: 400px;
+        }
+        
+        .chart-container h5 {
+            color: var(--primary-color);
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        
+        .progress-bar-container {
+            margin: 15px 0;
+        }
+        
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 0.85rem;
+        }
+        
+        .progress-bar {
+            height: 25px;
+        }
+        
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-top: 12px;
+            margin-bottom: 10px;
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--accent-color);
+            padding-bottom: 6px;
+        }
+        
+        .col-metric {
+            flex: 0 0 calc(20% - 8px);
+            min-width: 0;
+        }
+        
+        .time-filter-buttons {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .time-filter-btn {
+            padding: 8px 16px;
+            border: 2px solid #e0e0e0;
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            color: #666;
+        }
+        
+        .time-filter-btn:hover {
+            border-color: var(--primary-color);
+            background-color: rgba(0, 61, 130, 0.05);
+            color: var(--primary-color);
+        }
+        
+        .time-filter-btn.active {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
+            box-shadow: 0 2px 8px rgba(0, 61, 130, 0.3);
+        }
+        
+        .tab-content {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+        }
+        
+        .table-responsive {
+            margin-top: 15px;
+        }
+        
+        .badge-status {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        
+        .status-excellent {
+            background-color: rgba(6, 168, 125, 0.2);
+            color: var(--success-color);
+        }
+        
+        .status-good {
+            background-color: rgba(52, 152, 219, 0.2);
+            color: var(--info-color);
+        }
+        
+        .status-warning {
+            background-color: rgba(255, 210, 63, 0.2);
+            color: #ff6b35;
+        }
+        
+        .status-critical {
+            background-color: rgba(214, 40, 40, 0.2);
+            color: var(--danger-color);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">📊 Portfolio Agent - Enhanced</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link active" href="/">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/portfolio">Portfolio</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/scenarios">Scenarios</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/chat">🤖 Agent Chat</a></li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="analyticsDropdown" role="button" data-bs-toggle="dropdown">📊 Analytics</a>
+                        <ul class="dropdown-menu" aria-labelledby="analyticsDropdown">
+                            <li><a class="dropdown-item" href="/data-aggregation">📋 Data Aggregation</a></li>
+                            <li><a class="dropdown-item" href="/portfolio-health">🏥 Portfolio Health</a></li>
+                            <li><a class="dropdown-item" href="/risk-return-optimization">⚖️ Risk-Return Optimization</a></li>
+                            <li><a class="dropdown-item" href="/deal-impact">💼 Deal Impact</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item"><a class="nav-link" href="/recommendations">Recommendations</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/reports">Reports</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container-fluid p-4">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-lg-8">
+                <h1 class="display-6" style="color: var(--primary-color); font-weight: 700;">
+                    Dynamic Portfolio Optimisation Dashboard
+                </h1>
+                <p class="text-muted" id="lastUpdated">Last updated: --</p>
+            </div>
+            <div class="col-lg-4 text-end">
+                <button class="btn btn-primary" onclick="refreshDashboard()">🔄 Refresh</button>
+                <button class="btn btn-outline-primary" onclick="window.location.href='/reports'">📋 Report</button>
+            </div>
+        </div>
+        
+        <!-- Time Period Filters -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h5 style="color: var(--primary-color); font-weight: 600; margin-bottom: 12px;">📅 Select Time Period:</h5>
+                <div class="time-filter-buttons">
+                    <button class="time-filter-btn active" onclick="setTimePeriod('monthly')">📆 Monthly</button>
+                    <button class="time-filter-btn" onclick="setTimePeriod('quarter1')">Q1 View</button>
+                    <button class="time-filter-btn" onclick="setTimePeriod('quarter2')">Q2 View</button>
+                    <button class="time-filter-btn" onclick="setTimePeriod('three-months')">3 Months</button>
+                    <button class="time-filter-btn" onclick="setTimePeriod('last-year')">📊 Last Year</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Core Performance Metrics Row 1 -->
+        <h3 class="section-title">📊 Core Performance Metrics</h3>
+        <div class="row mb-3" id="coreKPIs" style="gap: 8px;">
+            <div class="col-metric">
+                <div class="stat-card accent">
+                    <h6>💰 GWP</h6>
+                    <div class="value" id="portfolioValue">--</div>
+                    <span class="trend" id="portfolioTrend">↑ +5.2%</span>
+                </div>
+            </div>
+            <div class="col-metric">
+                <div class="stat-card">
+                    <h6>🎯 Capital Util</h6>
+                    <div class="value" id="capitalUtil">--</div>
+                    <div class="progress-bar-container" style="margin: 4px 0;">
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar bg-primary" id="capUtilBar" role="progressbar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-metric">
+                <div class="stat-card success">
+                    <h6>📈 RORAC</h6>
+                    <div class="value" id="avgRorac">--</div>
+                </div>
+            </div>
+            <div class="col-metric">
+                <div class="stat-card warning">
+                    <h6>🔗 Diversif.</h6>
+                    <div class="value" id="diversScore">--</div>
+                    <div class="progress-bar-container" style="margin: 4px 0;">
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar" id="diversBar" style="width: 0%; background-color: #ff6b35;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-metric">
+                <div class="stat-card info">
+                    <h6>🚀 Prem Growth</h6>
+                    <div class="value" id="premiumGrowth">--</div>
+                    <span class="trend" id="premiumTrend">↑ +8.3%</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Strategic Performance Metrics Row 2 -->
+        <h3 class="section-title">🎯 Strategic Performance Metrics</h3>
+        <div class="row mb-4" id="strategicKPIs" style="gap: 8px;">
+            <div class="col-metric">
+                <div class="stat-card">
+                    <h6>⚠️ Claims Ratio</h6>
+                    <div class="value" id="claimsRatio">--</div>
+                    <div class="progress-bar-container" style="margin: 4px 0;">
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar bg-danger" id="claimsBar" role="progressbar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-metric">
+                <div class="stat-card secondary">
+                    <h6>⚡ Cap Efficiency</h6>
+                    <div class="value" id="capitalEfficiency">--</div>
+                </div>
+            </div>
+            <div class="col-metric">
+                <div class="stat-card">
+                    <h6>💼 UW Perf</h6>
+                    <div class="value" id="underwrtPerf">--</div>
+                    <span class="trend" id="underwrtTrend">↑ +3.1%</span>
+                </div>
+            </div>
+            <div class="col-metric">
+                <div class="stat-card accent" style="border-left-color: #3498db;">
+                    <h6>📊 Risk Score</h6>
+                    <div class="value" id="riskScore">--</div>
+                </div>
+            </div>
+            <div class="col-metric">
+                <div class="stat-card warning" style="border-left-color: #9b59b6;">
+                    <h6>💡 Efficiency</h6>
+                    <div class="value" id="efficiencyScore">--</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Row 1: Trends -->
+        <div class="row mb-4">
+            <div class="col-lg-6">
+                <div class="chart-container">
+                    <h5>📈 Portfolio Value Trend</h5>
+                    <canvas id="trendChart"></canvas>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="chart-container">
+                    <h5>📊 RORAC by Line of Business</h5>
+                    <canvas id="roracChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Row 2: Performance -->
+        <div class="row mb-4">
+            <div class="col-lg-6">
+                <div class="chart-container">
+                    <h5>⚖️ Claims Ratio Trend</h5>
+                    <canvas id="claimsChart"></canvas>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="chart-container">
+                    <h5>🎯 Capital Utilization Progress</h5>
+                    <div style="margin-top: 30px;">
+                        <div class="progress-bar-container">
+                            <div class="progress-label">
+                                <span>Target: 85%</span>
+                                <span id="capUtil" style="font-weight: 600;">--</span>
+                            </div>
+                            <div class="progress" style="height: 30px;">
+                                <div class="progress-bar" id="capUtilBar" role="progressbar" style="width: 0%; background-color: var(--success-color);">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="progress-bar-container mt-4">
+                            <div class="progress-label">
+                                <span>RORAC Target: 20%</span>
+                                <span id="roracPercent" style="font-weight: 600;">--</span>
+                            </div>
+                            <div class="progress" style="height: 30px;">
+                                <div class="progress-bar" id="roracBar" role="progressbar" style="width: 0%; background-color: var(--info-color);">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Portfolio Breakdown -->
+        <div class="row mb-4">
+            <div class="col-lg-6">
+                <div class="chart-container">
+                    <h5>🏢 Portfolio by Line of Business</h5>
+                    <canvas id="lobChart"></canvas>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="chart-container">
+                    <h5>🗺️ Geographic Distribution</h5>
+                    <canvas id="geoChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Performers -->
+        <h3 class="section-title">Top Performers & Risk Metrics</h3>
+        <div class="row mb-4">
+            <div class="col-lg-6">
+                <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.08);">
+                    <h5 style="color: var(--primary-color); font-weight: 600; margin-bottom: 15px;">🏆 Top 5 Treaties</h5>
+                    <div id="topTreaties" class="table-responsive">
+                        <table class="table table-sm table-hover">
+                            <thead style="background-color: #f8f9fa;">
+                                <tr>
+                                    <th>Treaty</th>
+                                    <th>RORAC</th>
+                                    <th>Premium</th>
+                                </tr>
+                            </thead>
+                            <tbody id="treatiesBody">
+                                <tr><td colspan="3" class="text-center text-muted">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.08);">
+                    <h5 style="color: var(--primary-color); font-weight: 600; margin-bottom: 15px;">⚠️ Risk Assessment</h5>
+                    <div style="margin-bottom: 15px;">
+                        <h6 style="color: #666; margin-bottom: 10px;">Capital Adequacy</h6>
+                        <span id="capitalAdequacy" class="badge-status status-excellent">✅ Adequate</span>
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <h6 style="color: #666; margin-bottom: 10px;">Concentration Risk</h6>
+                        <span id="concentrationRisk" class="badge-status status-good">✅ Low</span>
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <h6 style="color: #666; margin-bottom: 10px;">Claims Experience</h6>
+                        <span id="claimsStatus" class="badge-status status-excellent">✅ Excellent</span>
+                    </div>
+                    <div>
+                        <h6 style="color: #666; margin-bottom: 10px;">Market Performance</h6>
+                        <span id="marketStatus" class="badge-status status-good">✅ Good</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profitability by Geography -->
+        <h3 class="section-title">Detailed Analytics</h3>
+        <div class="row mb-4">
+            <div class="col-lg-12">
+                <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.08);">
+                    <h5 style="color: var(--primary-color); font-weight: 600; margin-bottom: 20px;">💰 Profitability by Geography</h5>
+                    <div class="row" id="geoProfit"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Global variables for time period filtering
+        let currentTimePeriod = 'monthly';
+        let trendChart, roracChart, claimsChart, lobChart, geoChart;
+        
+        // Time period multipliers for adjusting metrics based on time period
+        const timePeriodMultipliers = {
+            'monthly': { label: 'Monthly', factor: 1.0 },
+            'quarter1': { label: 'Q1 2026', factor: 2.8 },
+            'quarter2': { label: 'Q2 2026', factor: 2.9 },
+            'three-months': { label: 'Last 3 Months', factor: 3.0 },
+            'last-year': { label: 'Last Year', factor: 11.5 }
+        };
+        
+        // Function to set time period and update metrics
+        function setTimePeriod(period) {
+            currentTimePeriod = period;
+            
+            // Update active button
+            document.querySelectorAll('.time-filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Refresh dashboard with new time period
+            refreshDashboard();
+        }
+
+        async function refreshDashboard() {
+            try {
+                const summary = await fetch('/api/portfolio/summary').then(r => r.json());
+                const metrics = await fetch('/api/portfolio/metrics').then(r => r.json());
+                const enhanced = await fetch('/api/portfolio/enhanced').then(r => r.json()).catch(() => ({}));
+                
+                // Apply time period adjustments
+                const multiplier = timePeriodMultipliers[currentTimePeriod].factor;
+                const adjustedSummary = { ...summary };
+                const adjustedEnhanced = { ...enhanced };
+                
+                // Adjust portfolio value based on time period
+                if (currentTimePeriod !== 'monthly') {
+                    adjustedSummary.portfolio_value = (summary.portfolio_value || 0) * multiplier;
+                    adjustedEnhanced.portfolio_value = (enhanced.portfolio_value || 0) * multiplier;
+                    adjustedEnhanced.premium_growth = (enhanced.premium_growth || 8.3) * (multiplier > 3 ? 0.7 : 0.95);
+                }
+                
+                // Add time period label for display
+                const timeLabel = timePeriodMultipliers[currentTimePeriod].label;
+                
+                updateCoreKPIs(adjustedSummary);
+                updateEnhancedKPIs(adjustedEnhanced);
+                updateCharts(metrics, adjustedEnhanced);
+                updateTopTreaties(metrics);
+                updateRiskAssessment(adjustedSummary);
+                updateGeographyProfit(adjustedEnhanced);
+                
+                const istTime = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+                document.getElementById('lastUpdated').textContent = `Last updated: ${istTime} IST (${timeLabel})`;
+            } catch (error) {
+                console.error('Dashboard error:', error);
+            }
+        }
+
+        function updateCoreKPIs(summary) {
+            const pv = summary.portfolio_value || 0;
+            const cu = summary.capital_utilization || 0;
+            const ar = summary.average_rorac || 0;
+            const ds = summary.diversification_score || 0;
+            
+            document.getElementById('portfolioValue').textContent = `$${(pv / 1e6).toFixed(1)}M`;
+            document.getElementById('capitalUtil').textContent = `${cu.toFixed(1)}%`;
+            document.getElementById('avgRorac').textContent = `${ar.toFixed(1)}%`;
+            document.getElementById('diversScore').textContent = ds.toFixed(2);
+            
+            // Update progress bars
+            document.getElementById('capUtilBar').style.width = Math.min(cu, 100) + '%';
+            document.getElementById('diversBar').style.width = Math.min((ds / 1.0) * 100, 100) + '%';
+            
+            document.getElementById('capitalAdequacy').textContent = cu < 90 ? '✅ Adequate' : (cu < 110 ? '⚠️ Adequate' : '❌ Insufficient');
+            document.getElementById('concentrationRisk').textContent = ds > 0.7 ? '✅ Low' : (ds > 0.5 ? '⚠️ Moderate' : '❌ High');
+        }
+
+        function updateEnhancedKPIs(enhanced) {
+            const pg = enhanced.premium_growth || 12;
+            const cr = enhanced.claims_ratio || 58;
+            const ce = enhanced.capital_efficiency || 0.85;
+            const uw = enhanced.underwriting_perf || 85;
+            
+            document.getElementById('premiumGrowth').textContent = `${pg.toFixed(1)}%`;
+            document.getElementById('claimsRatio').textContent = `${cr.toFixed(1)}%`;
+            document.getElementById('capitalEfficiency').textContent = `$${ce.toFixed(2)}K`;
+            document.getElementById('underwrtPerf').textContent = `${uw.toFixed(0)}%`;
+            
+            // Update progress bars
+            document.getElementById('claimsBar').style.width = Math.min(cr, 100) + '%';
+            
+            // Calculate Risk Score (0-100 based on various factors)
+            // Lower claims ratio = higher score, higher UW performance = higher score
+            const riskScore = Math.round(100 - (cr / 1.5) + (uw / 2));
+            document.getElementById('riskScore').textContent = `${Math.min(100, Math.max(0, riskScore))}`;
+            
+            // Calculate Efficiency Score (0-100 based on capital efficiency and premium growth)
+            const efficiencyScore = Math.round((ce * 10) + (pg * 2));
+            document.getElementById('efficiencyScore').textContent = `${Math.min(100, Math.max(0, efficiencyScore)).toFixed(0)}`;
+            
+            document.getElementById('claimsStatus').className = cr < 60 ? 'badge-status status-excellent' : (cr < 70 ? 'badge-status status-good' : 'badge-status status-warning');
+            document.getElementById('marketStatus').className = uw > 80 ? 'badge-status status-excellent' : 'badge-status status-good';
+        }
+
+        function updateCharts(metrics, enhanced) {
+            if (trendChart) trendChart.destroy();
+            if (roracChart) roracChart.destroy();
+            if (claimsChart) claimsChart.destroy();
+            if (lobChart) lobChart.destroy();
+            if (geoChart) geoChart.destroy();
+
+            // Generate simulated historical data based on current values
+            const currentPortfolioValue = (enhanced.portfolio_value || 50000000) / 1e6;
+            const currentClaimsRatio = enhanced.claims_ratio || 42;
+            
+            // Portfolio Value Trend (simulate 7-month trend)
+            const basePortfolioValue = currentPortfolioValue * 0.85;
+            const portfolioTrend = [
+                basePortfolioValue * 0.95,
+                basePortfolioValue * 0.98,
+                basePortfolioValue * 1.02,
+                basePortfolioValue * 1.05,
+                basePortfolioValue * 1.08,
+                basePortfolioValue * 1.10,
+                currentPortfolioValue
+            ];
+            
+            // Claims Ratio Trend (simulate improvement)
+            const baseClaimsRatio = currentClaimsRatio + 8;
+            const claimsTrend = [
+                baseClaimsRatio,
+                baseClaimsRatio - 1.5,
+                baseClaimsRatio - 2.8,
+                baseClaimsRatio - 4.2,
+                baseClaimsRatio - 5.5,
+                baseClaimsRatio - 6.8,
+                currentClaimsRatio
+            ];
+
+            // Portfolio Value Trend
+            trendChart = new Chart(document.getElementById('trendChart'), {
+                type: 'line',
+                data: {
+                    labels: ['Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                    datasets: [{
+                        label: 'Portfolio Value ($M)',
+                        data: portfolioTrend,
+                        borderColor: '#ff6b35',
+                        backgroundColor: 'rgba(255, 107, 53, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        borderWidth: 2
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true } } }
+            });
+
+            // RORAC by LOB
+            const lobData = metrics.lob_breakdown || {};
+            const robData = metrics.performance_distribution || {};
+            roracChart = new Chart(document.getElementById('roracChart'), {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(lobData),
+                    datasets: [{
+                        label: 'Portfolio Value ($)',
+                        data: Object.values(lobData).map(v => v / 1e6),
+                        backgroundColor: ['#003d82', '#ff6b35', '#06a77d', '#ffd23f', '#d62828']
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, indexAxis: false }
+            });
+
+            // Claims Ratio Trend
+            claimsChart = new Chart(document.getElementById('claimsChart'), {
+                type: 'line',
+                data: {
+                    labels: ['Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                    datasets: [{
+                        label: 'Claims Ratio %',
+                        data: claimsTrend,
+                        borderColor: '#d62828',
+                        backgroundColor: 'rgba(214, 40, 40, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        borderWidth: 2
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+
+            // LOB Chart
+            lobChart = new Chart(document.getElementById('lobChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(lobData),
+                    datasets: [{
+                        data: Object.values(lobData).map(v => (v / 1e6).toFixed(1)),
+                        backgroundColor: ['#003d82', '#ff6b35', '#06a77d', '#ffd23f', '#d62828']
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+
+            // Geo Chart
+            const geoData = metrics.geography_breakdown || {};
+            geoChart = new Chart(document.getElementById('geoChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(geoData),
+                    datasets: [{
+                        data: Object.values(geoData),
+                        backgroundColor: ['#003d82', '#ff6b35', '#06a77d', '#3498db', '#9b59b6']
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+
+            // Progress Bars
+            const cu = (enhanced.capital_utilization || 65);
+            const roracPercent = (enhanced.average_rorac || 22);
+            document.getElementById('capUtilBar').style.width = Math.min(cu, 100) + '%';
+            document.getElementById('roracBar').style.width = Math.min(roracPercent, 100) + '%';
+            document.getElementById('capUtil').textContent = cu.toFixed(1) + '%';
+            document.getElementById('roracPercent').textContent = roracPercent.toFixed(1) + '%';
+        }
+
+        function updateTopTreaties(metrics) {
+            const treaties = (metrics.top_treaties || []).slice(0, 5);
+            const tbody = document.getElementById('treatiesBody');
+            tbody.innerHTML = treaties.map(t => `
+                <tr>
+                    <td>${t.treaty_id || 'N/A'}</td>
+                    <td><strong>${(t.rorac || 0).toFixed(1)}%</strong></td>
+                    <td>$${((t.premium || 0) / 1e6).toFixed(1)}M</td>
+                </tr>
+            `).join('');
+            
+            if (treaties.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted">No treaty data available</td></tr>';
+            }
+        }
+
+        function updateRiskAssessment(summary) {
+            const cu = summary.capital_utilization || 0;
+            const ds = summary.diversification_score || 0;
+            const cr = (summary.average_loss_ratio || 55);
+            const uw = (summary.underwriting_perf || 85);
+            
+            // Capital Adequacy
+            let capitalStatus = '❌ Insufficient';
+            let capitalClass = 'badge-status status-critical';
+            if (cu < 90) {
+                capitalStatus = '✅ Adequate';
+                capitalClass = 'badge-status status-excellent';
+            } else if (cu < 110) {
+                capitalStatus = '⚠️ Adequate';
+                capitalClass = 'badge-status status-warning';
+            }
+            document.getElementById('capitalAdequacy').textContent = capitalStatus;
+            document.getElementById('capitalAdequacy').className = capitalClass;
+            
+            // Concentration Risk
+            let concentrationStatus = '❌ High';
+            let concentrationClass = 'badge-status status-critical';
+            if (ds > 0.7) {
+                concentrationStatus = '✅ Low';
+                concentrationClass = 'badge-status status-excellent';
+            } else if (ds > 0.5) {
+                concentrationStatus = '⚠️ Moderate';
+                concentrationClass = 'badge-status status-warning';
+            }
+            document.getElementById('concentrationRisk').textContent = concentrationStatus;
+            document.getElementById('concentrationRisk').className = concentrationClass;
+            
+            // Claims Status
+            let claimsStatus = '❌ High';
+            let claimsClass = 'badge-status status-critical';
+            if (cr < 50) {
+                claimsStatus = '✅ Excellent';
+                claimsClass = 'badge-status status-excellent';
+            } else if (cr < 60) {
+                claimsStatus = '✅ Excellent';
+                claimsClass = 'badge-status status-excellent';
+            } else if (cr < 70) {
+                claimsStatus = '⚠️ Good';
+                claimsClass = 'badge-status status-good';
+            }
+            document.getElementById('claimsStatus').textContent = claimsStatus;
+            document.getElementById('claimsStatus').className = claimsClass;
+            
+            // Market Performance
+            let marketStatus = '❌ Poor';
+            let marketClass = 'badge-status status-critical';
+            if (uw > 85) {
+                marketStatus = '✅ Excellent';
+                marketClass = 'badge-status status-excellent';
+            } else if (uw > 75) {
+                marketStatus = '✅ Good';
+                marketClass = 'badge-status status-good';
+            } else if (uw > 60) {
+                marketStatus = '⚠️ Adequate';
+                marketClass = 'badge-status status-warning';
+            }
+            document.getElementById('marketStatus').textContent = marketStatus;
+            document.getElementById('marketStatus').className = marketClass;
+        }
+
+        function updateGeographyProfit(enhanced) {
+            const geos = enhanced.geography_profit || {
+                'North America': 52,
+                'Europe': 38,
+                'Asia Pacific': 28,
+                'Latin America': 12,
+                'Africa/ME': 8
+            };
+            
+            const container = document.getElementById('geoProfit');
+            container.innerHTML = Object.entries(geos).map(([geo, profit]) => `
+                <div class="col-lg-4 col-md-6 mb-3">
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; text-align: center;">
+                        <h6 style="color: var(--primary-color); margin-bottom: 10px;">${geo}</h6>
+                        <div style="font-size: 1.5rem; font-weight: 700; color: var(--success-color);">$${profit}M</div>
+                        <small class="text-muted">Profit</small>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateTimestamp() {
+            const istTime = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+            document.getElementById('lastUpdated').textContent = `Last updated: ${istTime} IST`;
+        }
+
+        // Initialize dashboard
+        setInterval(updateTimestamp, 1000);
+        setInterval(refreshDashboard, 60000);
+        refreshDashboard();
+    </script>
+</body>
+</html>

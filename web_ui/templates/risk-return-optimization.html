@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Risk-Return Optimization</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #003d82;
+            --accent-color: #ff6b35;
+            --success-color: #06a77d;
+            --warning-color: #ffd23f;
+            --danger-color: #d62828;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+        }
+        
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #005fa3 100%);
+            margin-bottom: 30px;
+        }
+        
+        .section-header {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .segment-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-top: 3px solid var(--primary-color);
+        }
+        
+        .metric-badge {
+            display: inline-block;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin: 5px 5px 5px 0;
+        }
+        
+        .metric-badge.high-return { background: #d4edda; color: #155724; }
+        .metric-badge.medium-return { background: #fff3cd; color: #856404; }
+        .metric-badge.low-return { background: #f8d7da; color: #721c24; }
+        
+        .efficiency-bar {
+            background: linear-gradient(to right, #d62828 0%, #ff6b35 25%, #ffd23f 50%, #06a77d 100%);
+            height: 8px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        
+        .chart-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            position: relative;
+            height: 450px;
+        }
+        
+        .recommendation-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+        
+        .recommendation-badge.maintain { background: #d4edda; color: #155724; }
+        .recommendation-badge.review { background: #fff3cd; color: #856404; }
+        .recommendation-badge.reduce { background: #f8d7da; color: #721c24; }
+        
+        .risk-metric {
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            margin-bottom: 10px;
+        }
+        
+        .risk-metric .label {
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .risk-metric .value {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">📊 Portfolio Manager</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="/">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/portfolio">Portfolio</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/scenarios">Scenarios</a></li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle active" href="#" id="analyticsDropdown" role="button" data-bs-toggle="dropdown">📊 Analytics</a>
+                        <ul class="dropdown-menu" aria-labelledby="analyticsDropdown">
+                            <li><a class="dropdown-item" href="/data-aggregation">📋 Data Aggregation</a></li>
+                            <li><a class="dropdown-item" href="/portfolio-health">🏥 Portfolio Health</a></li>
+                            <li><a class="dropdown-item active" href="/risk-return-optimization">⚖️ Risk-Return Optimization</a></li>
+                            <li><a class="dropdown-item" href="/deal-impact">💼 Deal Impact</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <!-- Header -->
+        <div class="section-header">
+            <h1>⚖️ Dynamic Risk-Return Optimization</h1>
+            <p class="text-muted">Evaluate segment contribution relative to return, capital usage, and diversification value</p>
+            <button class="btn btn-primary" onclick="refreshAnalysis()">🔄 Refresh Analysis</button>
+        </div>
+
+        <!-- Efficient Frontier Chart -->
+        <div class="chart-container">
+            <canvas id="efficientFrontierChart"></canvas>
+        </div>
+
+        <!-- Portfolio Overview -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="risk-metric">
+                    <div class="label">Portfolio Expected Return</div>
+                    <div class="value" id="portfolioReturn">--</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="risk-metric">
+                    <div class="label">Portfolio Risk Level</div>
+                    <div class="value" id="portfolioRisk">--</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="risk-metric">
+                    <div class="label">Risk-Return Ratio</div>
+                    <div class="value" id="riskReturnRatio">--</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Segment Analysis -->
+        <h3 class="mb-3">📊 Segment Performance Analysis</h3>
+        <div id="segmentCards"></div>
+
+        <!-- Risk-Return Scatter Plot -->
+        <div class="chart-container mt-4">
+            <canvas id="riskReturnScatterChart"></canvas>
+        </div>
+
+        <!-- Optimization Recommendations -->
+        <div class="section-header mt-4">
+            <h4>💡 Optimization Recommendations</h4>
+            <div id="optimizationRecommendations" style="margin-top: 20px;"></div>
+        </div>
+
+        <!-- Diversification Analysis -->
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="chart-container">
+                    <canvas id="diversificationChart"></canvas>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="section-header">
+                    <h5>Diversification Analysis</h5>
+                    <div id="diversificationAnalysis" style="margin-top: 20px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let analysisData = null;
+        let efficientChart = null;
+        let scatterChart = null;
+        let diversChart = null;
+
+        async function refreshAnalysis() {
+            try {
+                const response = await fetch('/api/risk-return-analysis');
+                analysisData = await response.json();
+                displayPortfolioMetrics();
+                displaySegmentCards();
+                displayEfficientFrontier();
+                displayRiskReturnScatter();
+                displayDiversificationAnalysis();
+                displayRecommendations();
+            } catch (error) {
+                console.error('Error loading risk-return analysis:', error);
+                alert('Error loading analysis data');
+            }
+        }
+
+        function displayPortfolioMetrics() {
+            if (!analysisData || !analysisData.efficient_frontier) return;
+            
+            const ef = analysisData.efficient_frontier;
+            document.getElementById('portfolioReturn').textContent = ef.portfolio_return.toFixed(1) + '%';
+            document.getElementById('portfolioRisk').textContent = (100 - (100 - ef.portfolio_risk)).toFixed(1);
+            document.getElementById('riskReturnRatio').textContent = 
+                (ef.portfolio_return / Math.max(ef.portfolio_risk, 1)).toFixed(2);
+        }
+
+        function displaySegmentCards() {
+            if (!analysisData || !analysisData.segments) return;
+            
+            const cardsHtml = Object.entries(analysisData.segments).map(([segment, data]) => `
+                <div class="segment-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <h5>${segment}</h5>
+                        <span class="recommendation-badge ${data.recommendation.toLowerCase()}">${data.recommendation}</span>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-3">
+                            <small class="text-muted">Expected Return</small>
+                            <div class="metric-value" style="font-size: 1.5rem;">${data.expected_return.toFixed(1)}%</div>
+                        </div>
+                        <div class="col-md-3">
+                            <small class="text-muted">Capital Usage</small>
+                            <div class="metric-value" style="font-size: 1.5rem;">${data.capital_usage.toFixed(1)}%</div>
+                        </div>
+                        <div class="col-md-3">
+                            <small class="text-muted">Tail Risk Load</small>
+                            <div class="metric-value" style="font-size: 1.5rem;">${data.tail_risk_load.toFixed(1)}%</div>
+                        </div>
+                        <div class="col-md-3">
+                            <small class="text-muted">Efficiency Score</small>
+                            <div class="metric-value" style="font-size: 1.5rem;">${data.efficiency_score.toFixed(2)}</div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 15px;">
+                        <small class="text-muted">Diversification Value</small>
+                        <div class="efficiency-bar"></div>
+                        <small>Score: ${data.diversification_value.toFixed(2)}</small>
+                    </div>
+                </div>
+            `).join('');
+            
+            document.getElementById('segmentCards').innerHTML = cardsHtml;
+        }
+
+        function displayEfficientFrontier() {
+            if (!analysisData || !analysisData.segments) return;
+            
+            const segments = Object.keys(analysisData.segments);
+            const returns = segments.map(s => analysisData.segments[s].expected_return);
+            const risks = segments.map(s => analysisData.segments[s].tail_risk_load);
+            
+            // Only create chart if Chart.js is loaded
+            if (typeof Chart === 'undefined') return;
+            
+            const ctx = document.getElementById('efficientFrontierChart').getContext('2d');
+            if (efficientChart) efficientChart.destroy();
+            
+            efficientChart = new Chart(ctx, {
+                type: 'bubble',
+                data: {
+                    datasets: [{
+                        label: 'Portfolio Segments',
+                        data: segments.map((s, i) => ({
+                            x: risks[i],
+                            y: returns[i],
+                            r: 15,
+                            label: s
+                        })),
+                        backgroundColor: ['#003d82', '#005fa3', '#ff6b35', '#06a77d', '#ffd23f'],
+                        borderColor: '#003d82',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.raw.label + ' - Return: ' + context.raw.y.toFixed(1) + '%, Risk: ' + context.raw.x.toFixed(1) + '%';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { 
+                            title: { display: true, text: 'Tail Risk Load (%)' },
+                            beginAtZero: true
+                        },
+                        y: { 
+                            title: { display: true, text: 'Expected Return (%)' },
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        function displayRiskReturnScatter() {
+            if (!analysisData || !analysisData.segments) return;
+            
+            const segments = Object.keys(analysisData.segments);
+            const capitalUsage = segments.map(s => analysisData.segments[s].capital_usage);
+            const returns = segments.map(s => analysisData.segments[s].expected_return);
+            
+            // Only create chart if Chart.js is loaded
+            if (typeof Chart === 'undefined') return;
+            
+            const ctx = document.getElementById('riskReturnScatterChart').getContext('2d');
+            if (scatterChart) scatterChart.destroy();
+            
+            scatterChart = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'Segment Positioning',
+                        data: segments.map((s, i) => ({
+                            x: capitalUsage[i],
+                            y: returns[i],
+                            label: s
+                        })),
+                        backgroundColor: ['#003d82', '#005fa3', '#ff6b35', '#06a77d', '#ffd23f'],
+                        borderColor: '#003d82',
+                        borderWidth: 2,
+                        pointRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.raw.label + ' - Capital: ' + context.raw.x.toFixed(1) + '%, Return: ' + context.raw.y.toFixed(1) + '%';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { 
+                            title: { display: true, text: 'Capital Usage (%)' },
+                            beginAtZero: true,
+                            max: 100
+                        },
+                        y: { 
+                            title: { display: true, text: 'Expected Return (%)' },
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        function displayDiversificationAnalysis() {
+            if (!analysisData || !analysisData.segments) return;
+            
+            const segments = Object.keys(analysisData.segments);
+            const diversValues = segments.map(s => analysisData.segments[s].diversification_value);
+            
+            // Only create chart if Chart.js is loaded
+            if (typeof Chart === 'undefined') return;
+            
+            const ctx = document.getElementById('diversificationChart').getContext('2d');
+            if (diversChart) diversChart.destroy();
+            
+            diversChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: segments,
+                    datasets: [{
+                        label: 'Diversification Value',
+                        data: diversValues,
+                        backgroundColor: '#003d82',
+                        borderColor: '#005fa3',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 1.2,
+                            title: { display: true, text: 'Diversification Value' }
+                        }
+                    }
+                }
+            });
+            
+            // Analysis summary
+            const avgDiversif = (diversValues.reduce((a, b) => a + b, 0) / diversValues.length).toFixed(2);
+            const analysis = `
+                <p><strong>Average Diversification Value:</strong> ${avgDiversif}</p>
+                <p><small class="text-muted">Segments with higher diversification value provide better portfolio risk reduction.</small></p>
+                <ul style="margin-top: 15px;">
+                    <li>Well-diversified segments: ${segments.filter((_, i) => diversValues[i] > 0.9).join(', ') || 'None'}</li>
+                    <li>Moderate diversification: ${segments.filter((_, i) => diversValues[i] >= 0.85 && diversValues[i] <= 0.9).join(', ') || 'None'}</li>
+                    <li>Lower diversification: ${segments.filter((_, i) => diversValues[i] < 0.85).join(', ') || 'None'}</li>
+                </ul>
+            `;
+            document.getElementById('diversificationAnalysis').innerHTML = analysis;
+        }
+
+        function displayRecommendations() {
+            if (!analysisData || !analysisData.segments) return;
+            
+            const segments = Object.entries(analysisData.segments);
+            const recommendations = segments.map(([name, data]) => {
+                const reason = data.recommendation === 'Maintain' 
+                    ? 'Strong risk-adjusted returns with good capital efficiency'
+                    : data.recommendation === 'Review'
+                    ? 'Moderate returns - consider if capital can be deployed elsewhere'
+                    : 'Below target returns - evaluate for reduction or restructuring';
+                
+                return `
+                    <div style="padding: 12px; background: #f8f9fa; border-radius: 6px; margin-bottom: 10px;">
+                        <strong>${name}:</strong> ${data.recommendation} <br>
+                        <small class="text-muted">${reason}</small>
+                    </div>
+                `;
+            }).join('');
+            
+            document.getElementById('optimizationRecommendations').innerHTML = recommendations;
+        }
+
+        // Initialize on page load - wait for Chart.js to load
+        function initializePageWhenReady() {
+            if (typeof Chart !== 'undefined') {
+                refreshAnalysis();
+            } else {
+                setTimeout(initializePageWhenReady, 100);
+            }
+        }
+        setTimeout(initializePageWhenReady, 500);
+    </script>
+</body>
+</html>

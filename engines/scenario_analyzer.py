@@ -176,3 +176,63 @@ class ScenarioAnalyzer:
                 'rorac': round(sum(s['rorac'] * s['probability'] for s in scenarios), 2)
             }
         }
+    
+    def calculate_enhanced_metrics(self) -> Dict:
+        """Calculate enhanced KPIs for advanced dashboard"""
+        total_premium = self.treaties['premium'].sum()
+        total_profit = self.treaties['expected_profit'].sum()
+        
+        # Premium Growth YoY (mock data)
+        premium_growth_yoy = 8.3
+        
+        # Overall Claims Ratio (Loss Ratio as percentage)
+        overall_loss_ratio = (self.treaties['loss_ratio'].mean())
+        claims_ratio = overall_loss_ratio * 100
+        
+        # Capital Efficiency (Profit per $1M capital)
+        total_capital = self.portfolio.get('capital_utilization', 65) / 100 * total_premium
+        capital_efficiency = (total_profit / total_capital * 1e3) if total_capital > 0 else 0
+        
+        # Underwriting Performance (0-100 scale)
+        avg_rorac = self.portfolio.get('average_rorac', 22)
+        underwriting_perf = min((avg_rorac / 25) * 100, 100)
+        
+        # LOB Loss Ratios
+        lob_loss_ratios = {}
+        for lob in self.treaties['lob'].unique():
+            lob_data = self.treaties[self.treaties['lob'] == lob]
+            lob_loss_ratios[lob] = round(lob_data['loss_ratio'].mean() * 100, 1)
+        
+        # Geography Profit
+        geography_profit = {}
+        for geo in self.treaties['geography'].unique():
+            geo_data = self.treaties[self.treaties['geography'] == geo]
+            geo_profit = geo_data['expected_profit'].sum() / 1e6
+            geography_profit[geo] = round(geo_profit, 1)
+        
+        # Risk Concentration Index (opposite of diversification)
+        diversification_score = self.portfolio.get('diversification_score', 0.72)
+        risk_concentration = round((1.0 - diversification_score) * 100, 1)
+        
+        # Top Performers by LOB
+        top_by_lob = {}
+        for lob in self.treaties['lob'].unique():
+            top_treaty = self.treaties[self.treaties['lob'] == lob].nlargest(1, 'rorac')
+            if not top_treaty.empty:
+                top_by_lob[lob] = {
+                    'treaty_id': top_treaty.iloc[0]['treaty_id'],
+                    'rorac': round(top_treaty.iloc[0]['rorac'], 1)
+                }
+        
+        return {
+            'premium_growth': premium_growth_yoy,
+            'claims_ratio': round(claims_ratio, 1),
+            'capital_efficiency': round(capital_efficiency, 2),
+            'underwriting_perf': round(underwriting_perf, 0),
+            'lob_loss_ratios': lob_loss_ratios,
+            'geography_profit': geography_profit,
+            'risk_concentration_index': risk_concentration,
+            'top_by_lob': top_by_lob,
+            'capital_utilization': self.portfolio.get('capital_utilization', 65),
+            'average_rorac': self.portfolio.get('average_rorac', 22)
+        }

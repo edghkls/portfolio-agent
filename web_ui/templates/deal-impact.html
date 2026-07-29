@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deal Impact Assessment</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #003d82;
+            --accent-color: #ff6b35;
+            --success-color: #06a77d;
+            --warning-color: #ffd23f;
+            --danger-color: #d62828;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+        }
+        
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #005fa3 100%);
+            margin-bottom: 30px;
+        }
+        
+        .section-header {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .form-card {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .input-group-text {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+        }
+        
+        .form-label {
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 8px;
+        }
+        
+        .metric-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .metric-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-top: 10px;
+        }
+        
+        .assessment-result {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-top: 20px;
+            border-top: 4px solid var(--primary-color);
+        }
+        
+        .recommendation-badge {
+            display: inline-block;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-weight: 700;
+            font-size: 1rem;
+            margin-top: 15px;
+        }
+        
+        .recommendation-badge.accept {
+            background: #d4edda;
+            color: #155724;
+            border: 2px solid #155724;
+        }
+        
+        .recommendation-badge.review {
+            background: #fff3cd;
+            color: #856404;
+            border: 2px solid #856404;
+        }
+        
+        .recommendation-badge.decline {
+            background: #f8d7da;
+            color: #721c24;
+            border: 2px solid #721c24;
+        }
+        
+        .comparison-table {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-top: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .comparison-table table {
+            margin: 0;
+        }
+        
+        .comparison-table thead {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #005fa3 100%);
+            color: white;
+        }
+        
+        .chart-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            position: relative;
+            height: 400px;
+        }
+        
+        .impact-positive {
+            color: #06a77d;
+            font-weight: 600;
+        }
+        
+        .impact-negative {
+            color: #d62828;
+            font-weight: 600;
+        }
+        
+        .impact-neutral {
+            color: #ff6b35;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">📊 Portfolio Manager</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="/">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/portfolio">Portfolio</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/scenarios">Scenarios</a></li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle active" href="#" id="analyticsDropdown" role="button" data-bs-toggle="dropdown">📊 Analytics</a>
+                        <ul class="dropdown-menu" aria-labelledby="analyticsDropdown">
+                            <li><a class="dropdown-item" href="/data-aggregation">📋 Data Aggregation</a></li>
+                            <li><a class="dropdown-item" href="/portfolio-health">🏥 Portfolio Health</a></li>
+                            <li><a class="dropdown-item" href="/risk-return-optimization">⚖️ Risk-Return Optimization</a></li>
+                            <li><a class="dropdown-item active" href="/deal-impact">💼 Deal Impact</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <!-- Header -->
+        <div class="section-header">
+            <h1>💼 Incremental Deal Impact Assessment</h1>
+            <p class="text-muted">Evaluate new opportunities on standalone and portfolio integration merits</p>
+        </div>
+
+        <!-- Deal Input Form -->
+        <div class="form-card">
+            <h4>📋 Deal Parameters</h4>
+            <div class="row mt-4">
+                <div class="col-md-3">
+                    <label class="form-label">Deal Premium ($M)</label>
+                    <input type="number" class="form-control" id="dealPremium" value="5" min="0.1" step="0.1">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Deal RORAC (%)</label>
+                    <input type="number" class="form-control" id="dealRorac" value="200" min="50" step="10">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Line of Business</label>
+                    <select class="form-control" id="dealLob">
+                        <option>Property</option>
+                        <option>Casualty</option>
+                        <option>Marine</option>
+                        <option>Specialty</option>
+                        <option>Reinsurance</option>
+                    </select>
+                </div>
+                <div class="col-md-3" style="display: flex; align-items: flex-end;">
+                    <button class="btn btn-primary w-100" onclick="assessDealImpact()">
+                        🔍 Assess Deal
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Standalone Deal Metrics -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="metric-card">
+                    <small class="text-muted">Standalone Deal Premium</small>
+                    <div class="metric-value" id="dealPremiumDisplay">--</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="metric-card">
+                    <small class="text-muted">Standalone RORAC</small>
+                    <div class="metric-value" id="dealRoracDisplay">--</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="metric-card">
+                    <small class="text-muted">Capital Required</small>
+                    <div class="metric-value" id="dealCapitalDisplay">--</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Assessment Results -->
+        <div class="assessment-result" id="assessmentResult" style="display: none;">
+            <h3>Assessment Results</h3>
+            
+            <!-- Recommendation -->
+            <div style="margin-top: 20px;">
+                <h5>Recommendation</h5>
+                <span class="recommendation-badge" id="recommendationBadge">Loading...</span>
+                <p class="text-muted mt-3" id="rationale">--</p>
+            </div>
+
+            <!-- Portfolio Impact Table -->
+            <div class="comparison-table mt-4">
+                <table class="table mb-0">
+                    <thead>
+                        <tr>
+                            <th>Metric</th>
+                            <th>Current Portfolio</th>
+                            <th>Post-Deal Portfolio</th>
+                            <th>Change</th>
+                            <th>Impact</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Portfolio Value</strong></td>
+                            <td id="currentPortfolioValue">--</td>
+                            <td id="newPortfolioValue">--</td>
+                            <td id="portfolioValueChange">--</td>
+                            <td id="portfolioValueImpact">--</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Average RORAC</strong></td>
+                            <td id="currentRorac">--</td>
+                            <td id="newRorac">--</td>
+                            <td id="roracChange">--</td>
+                            <td id="roracImpact">--</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Capital Utilization</strong></td>
+                            <td id="currentCapitalUtil">--</td>
+                            <td id="newCapitalUtil">--</td>
+                            <td id="capitalUtilChange">--</td>
+                            <td id="capitalUtilImpact">--</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Impact Chart -->
+            <div class="chart-container">
+                <canvas id="impactChart"></canvas>
+            </div>
+
+            <!-- Detailed Analysis -->
+            <div style="margin-top: 30px;">
+                <h5>Detailed Analysis</h5>
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <div class="metric-card">
+                            <h6>Portfolio Value Impact</h6>
+                            <p id="portfolioValueAnalysis" class="text-muted mt-2"></p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="metric-card">
+                            <h6>Capital Efficiency</h6>
+                            <p id="capitalEfficiencyAnalysis" class="text-muted mt-2"></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="metric-card">
+                            <h6>Return Impact</h6>
+                            <p id="returnAnalysis" class="text-muted mt-2"></p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="metric-card">
+                            <h6>Risk Considerations</h6>
+                            <p id="riskAnalysis" class="text-muted mt-2"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Guidance Section -->
+        <div class="section-header mt-4" id="guidanceSection">
+            <h5>📖 Assessment Guidance</h5>
+            <p class="text-muted">Enter deal parameters above and click "Assess Deal" to evaluate the opportunity. The analysis considers:</p>
+            <ul>
+                <li><strong>Standalone Merits:</strong> Deal premium, RORAC, and capital requirements</li>
+                <li><strong>Portfolio Impact:</strong> Effect on overall portfolio metrics and composition</li>
+                <li><strong>Capital Efficiency:</strong> Capital deployment and utilization changes</li>
+                <li><strong>Return Profile:</strong> Impact on portfolio average RORAC</li>
+                <li><strong>Risk Assessment:</strong> Capital adequacy and diversification effects</li>
+            </ul>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let impactData = null;
+        let impactChart = null;
+
+        async function assessDealImpact() {
+            try {
+                const dealPremium = parseFloat(document.getElementById('dealPremium').value) * 1e6;
+                const dealRorac = parseFloat(document.getElementById('dealRorac').value);
+                const dealLob = document.getElementById('dealLob').value;
+
+                const response = await fetch('/api/deal-impact-assessment', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        premium: dealPremium,
+                        rorac: dealRorac,
+                        lob: dealLob
+                    })
+                });
+
+                impactData = await response.json();
+                displayAssessment();
+                document.getElementById('assessmentResult').style.display = 'block';
+                document.getElementById('guidanceSection').style.display = 'none';
+            } catch (error) {
+                console.error('Error assessing deal:', error);
+                alert('Error processing deal assessment');
+            }
+        }
+
+        function displayAssessment() {
+            if (!impactData) return;
+
+            const standalone = impactData.standalone_metrics;
+            const impact = impactData.portfolio_impact;
+
+            // Display deal parameters
+            document.getElementById('dealPremiumDisplay').textContent = '$' + (standalone.premium / 1e6).toFixed(1) + 'M';
+            document.getElementById('dealRoracDisplay').textContent = standalone.rorac.toFixed(1) + '%';
+            document.getElementById('dealCapitalDisplay').textContent = '$' + (standalone.capital_required / 1e6).toFixed(1) + 'M';
+
+            // Display recommendation
+            const recommendation = impactData.recommendation.toLowerCase();
+            document.getElementById('recommendationBadge').textContent = impactData.recommendation.toUpperCase();
+            document.getElementById('recommendationBadge').className = 'recommendation-badge ' + recommendation;
+            document.getElementById('rationale').textContent = impactData.rationale;
+
+            // Display comparison table
+            const currentRorac = 231; // From dashboard
+            const currentCapitalUtil = 98.9;
+            const currentPortfolioValue = 256.9; // in millions
+
+            document.getElementById('currentPortfolioValue').textContent = '$' + currentPortfolioValue.toFixed(1) + 'M';
+            document.getElementById('newPortfolioValue').textContent = '$' + ((currentPortfolioValue + standalone.premium / 1e6).toFixed(1)) + 'M';
+            document.getElementById('portfolioValueChange').textContent = '+$' + (standalone.premium / 1e6).toFixed(1) + 'M';
+            document.getElementById('portfolioValueImpact').innerHTML = '<span class="impact-positive">✓ Positive</span>';
+
+            document.getElementById('currentRorac').textContent = currentRorac.toFixed(1) + '%';
+            document.getElementById('newRorac').textContent = impact.new_portfolio_rorac.toFixed(1) + '%';
+            const roracChangeVal = impact.rorac_change;
+            document.getElementById('roracChange').textContent = (roracChangeVal > 0 ? '+' : '') + roracChangeVal.toFixed(1) + '%';
+            const roracClass = roracChangeVal > 0 ? 'impact-positive' : roracChangeVal < 0 ? 'impact-negative' : 'impact-neutral';
+            document.getElementById('roracImpact').innerHTML = `<span class="${roracClass}">${roracChangeVal > 0 ? '↑' : roracChangeVal < 0 ? '↓' : '→'}</span>`;
+
+            document.getElementById('currentCapitalUtil').textContent = currentCapitalUtil.toFixed(1) + '%';
+            document.getElementById('newCapitalUtil').textContent = impact.new_capital_utilization.toFixed(1) + '%';
+            const capitalChange = impact.capital_utilization_change;
+            document.getElementById('capitalUtilChange').textContent = (capitalChange > 0 ? '+' : '') + capitalChange.toFixed(1) + '%';
+            const capitalClass = capitalChange > -5 && capitalChange < 5 ? 'impact-neutral' : capitalChange > 0 ? 'impact-negative' : 'impact-positive';
+            document.getElementById('capitalUtilImpact').innerHTML = `<span class="${capitalClass}">${capitalChange > 0 ? '↑' : capitalChange < 0 ? '↓' : '→'}</span>`;
+
+            // Display detailed analysis
+            const portfolioValuePct = (standalone.premium / (currentPortfolioValue * 1e6) * 100);
+            document.getElementById('portfolioValueAnalysis').innerHTML = 
+                `Deal adds $${(standalone.premium / 1e6).toFixed(1)}M premium, representing ${portfolioValuePct.toFixed(1)}% portfolio growth.`;
+
+            const capitalImpact = capitalChange > 0 ? 
+                `Capital utilization increases by ${capitalChange.toFixed(1)}% to ${impact.new_capital_utilization.toFixed(1)}%.` :
+                `Capital utilization improves by ${Math.abs(capitalChange).toFixed(1)}% to ${impact.new_capital_utilization.toFixed(1)}%.`;
+            document.getElementById('capitalEfficiencyAnalysis').innerHTML = capitalImpact;
+
+            const roracImpactText = roracChangeVal > 0 ?
+                `Portfolio RORAC improves by ${roracChangeVal.toFixed(1)}% due to attractive deal returns.` :
+                `Portfolio RORAC adjusts by ${roracChangeVal.toFixed(1)}% to ${impact.new_portfolio_rorac.toFixed(1)}%.`;
+            document.getElementById('returnAnalysis').innerHTML = roracImpactText;
+
+            const riskText = impact.new_capital_utilization > 100 ?
+                `⚠️ Capital utilization would exceed 100%. Recommend reviewing capital deployment strategy.` :
+                impact.new_capital_utilization > 95 ?
+                `Capital utilization remains elevated. Monitor capital adequacy.` :
+                `✓ Capital position remains healthy with adequate buffer.`;
+            document.getElementById('riskAnalysis').innerHTML = riskText;
+
+            // Display impact chart
+            displayImpactChart(currentRorac, impact.new_portfolio_rorac, currentCapitalUtil, impact.new_capital_utilization);
+        }
+
+        function displayImpactChart(currentRorac, newRorac, currentCap, newCap) {
+            // Only create chart if Chart.js is loaded
+            if (typeof Chart === 'undefined') return;
+            
+            const ctx = document.getElementById('impactChart').getContext('2d');
+            if (impactChart) impactChart.destroy();
+
+            impactChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Portfolio RORAC (%)', 'Capital Utilization (%)'],
+                    datasets: [
+                        {
+                            label: 'Current',
+                            data: [currentRorac, currentCap],
+                            backgroundColor: '#003d82'
+                        },
+                        {
+                            label: 'Post-Deal',
+                            data: [newRorac, newCap],
+                            backgroundColor: '#06a77d'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true, max: 300 }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>

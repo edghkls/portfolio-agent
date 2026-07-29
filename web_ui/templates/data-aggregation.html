@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Aggregation & Normalization</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #003d82;
+            --accent-color: #ff6b35;
+            --success-color: #06a77d;
+            --warning-color: #ffd23f;
+            --danger-color: #d62828;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+        }
+        
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #005fa3 100%);
+            margin-bottom: 30px;
+        }
+        
+        .section-header {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .metric-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .metric-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-top: 10px;
+        }
+        
+        .data-table {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .data-table table {
+            margin: 0;
+        }
+        
+        .data-table thead {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #005fa3 100%);
+            color: white;
+        }
+        
+        .data-table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .chart-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            position: relative;
+            height: 400px;
+        }
+        
+        .tab-content {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .badge-custom {
+            font-size: 0.85rem;
+            padding: 6px 12px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">📊 Portfolio Manager</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="/">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/portfolio">Portfolio</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/scenarios">Scenarios</a></li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle active" href="#" id="analyticsDropdown" role="button" data-bs-toggle="dropdown">📊 Analytics</a>
+                        <ul class="dropdown-menu" aria-labelledby="analyticsDropdown">
+                            <li><a class="dropdown-item active" href="/data-aggregation">📋 Data Aggregation</a></li>
+                            <li><a class="dropdown-item" href="/portfolio-health">🏥 Portfolio Health</a></li>
+                            <li><a class="dropdown-item" href="/risk-return-optimization">⚖️ Risk-Return Optimization</a></li>
+                            <li><a class="dropdown-item" href="/deal-impact">💼 Deal Impact</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <!-- Header -->
+        <div class="section-header">
+            <h1>📋 Portfolio Data Aggregation & Normalization</h1>
+            <p class="text-muted">Comprehensive treaty, cedant, exposure, and attribute data management</p>
+            <button class="btn btn-primary" onclick="refreshData()">🔄 Refresh Data</button>
+        </div>
+
+        <!-- Key Metrics Row -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="metric-card">
+                    <small class="text-muted">Total Portfolio Value</small>
+                    <div class="metric-value" id="totalPortfolioValue">--</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="metric-card">
+                    <small class="text-muted">Total Treaties</small>
+                    <div class="metric-value" id="totalTreaties">--</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="metric-card">
+                    <small class="text-muted">Utilized Capital</small>
+                    <div class="metric-value" id="utilizedCapital">--</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="metric-card">
+                    <small class="text-muted">Available Capital</small>
+                    <div class="metric-value" id="availableCapital">--</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <ul class="nav nav-tabs mb-4" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link active" data-bs-toggle="tab" href="#lob-aggregation">Line of Business</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" href="#geography-aggregation">Geographic Distribution</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" href="#capital-allocation">Capital Allocation</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" href="#exposure-data">Exposure & Limits</a>
+            </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content">
+            <!-- LOB Aggregation -->
+            <div id="lob-aggregation" class="tab-pane fade show active">
+                <h4>💼 Line of Business Aggregation</h4>
+                <div class="data-table mt-3">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>LOB</th>
+                                <th>Treaty Count</th>
+                                <th>Total Premium</th>
+                                <th>Avg RORAC</th>
+                                <th>Avg Loss Ratio</th>
+                                <th>Combined Ratio</th>
+                                <th>ROC</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lobTable">
+                            <tr><td colspan="7" class="text-center text-muted">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="chart-container mt-4">
+                    <canvas id="lobPremiumChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Geography Aggregation -->
+            <div id="geography-aggregation" class="tab-pane fade">
+                <h4>🌍 Geographic Distribution</h4>
+                <div class="data-table mt-3">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Geography</th>
+                                <th>Treaty Count</th>
+                                <th>Total Premium</th>
+                                <th>Avg RORAC</th>
+                                <th>Concentration %</th>
+                            </tr>
+                        </thead>
+                        <tbody id="geoTable">
+                            <tr><td colspan="5" class="text-center text-muted">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="chart-container mt-4">
+                    <canvas id="geoPremiumChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Capital Allocation -->
+            <div id="capital-allocation" class="tab-pane fade">
+                <h4>💰 Capital Allocation Analysis</h4>
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <div class="metric-card">
+                            <small class="text-muted">Total Capital Available</small>
+                            <div class="metric-value" id="totalCapital">--</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="metric-card">
+                            <small class="text-muted">Utilization Rate</small>
+                            <div class="metric-value" id="utilizationRate">--</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="chart-container mt-4">
+                    <canvas id="capitalAllocationChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Exposure & Limits -->
+            <div id="exposure-data" class="tab-pane fade">
+                <h4>⚠️ Exposure & Limit Management</h4>
+                <div class="alert alert-info">
+                    <strong>Exposure Attributes:</strong> Top 10 treaties by premium with exposure limits
+                </div>
+                <div class="data-table mt-3">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Treaty ID</th>
+                                <th>LOB</th>
+                                <th>Premium</th>
+                                <th>Exposure Limit</th>
+                                <th>Limit Utilization</th>
+                                <th>Perils</th>
+                            </tr>
+                        </thead>
+                        <tbody id="exposureTable">
+                            <tr><td colspan="6" class="text-center text-muted">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let aggregatedData = null;
+        let lobPremiumChart = null;
+        let geoPremiumChart = null;
+        let capitalChart = null;
+
+        async function refreshData() {
+            try {
+                const response = await fetch('/api/aggregated-portfolio');
+                aggregatedData = await response.json();
+                displayPortfolioMetrics();
+                displayLobAggregation();
+                displayGeoAggregation();
+                displayCapitalAllocation();
+                displayExposureData();
+            } catch (error) {
+                console.error('Error loading aggregated data:', error);
+                alert('Error loading portfolio data');
+            }
+        }
+
+        function displayPortfolioMetrics() {
+            if (!aggregatedData) return;
+            
+            document.getElementById('totalPortfolioValue').textContent = 
+                '$' + (aggregatedData.total_portfolio_value / 1e6).toFixed(1) + 'M';
+            document.getElementById('totalTreaties').textContent = 
+                aggregatedData.total_treaties;
+            document.getElementById('utilizedCapital').textContent = 
+                '$' + (aggregatedData.capital_allocation.utilized_capital / 1e6).toFixed(1) + 'M';
+            document.getElementById('availableCapital').textContent = 
+                '$' + (aggregatedData.capital_allocation.available_capital / 1e6).toFixed(1) + 'M';
+        }
+
+        function displayLobAggregation() {
+            if (!aggregatedData || !aggregatedData.lob_aggregation) return;
+            
+            const lobTable = document.getElementById('lobTable');
+            lobTable.innerHTML = Object.entries(aggregatedData.lob_aggregation).map(([lob, data]) => `
+                <tr>
+                    <td><strong>${lob}</strong></td>
+                    <td>${data.treaty_count}</td>
+                    <td>$${(data.total_premium / 1e6).toFixed(1)}M</td>
+                    <td>${data.avg_rorac.toFixed(1)}%</td>
+                    <td>${data.avg_loss_ratio.toFixed(1)}%</td>
+                    <td>${data.combined_ratio.toFixed(1)}%</td>
+                    <td>${data.return_on_capital.toFixed(1)}%</td>
+                </tr>
+            `).join('');
+
+            // Update chart - only if Chart.js is loaded
+            if (typeof Chart === 'undefined') return;
+            
+            const ctx = document.getElementById('lobPremiumChart').getContext('2d');
+            if (lobPremiumChart) lobPremiumChart.destroy();
+            
+            const lobs = Object.keys(aggregatedData.lob_aggregation);
+            const premiums = lobs.map(lob => aggregatedData.lob_aggregation[lob].total_premium / 1e6);
+            
+            lobPremiumChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: lobs,
+                    datasets: [{
+                        label: 'Premium ($M)',
+                        data: premiums,
+                        backgroundColor: '#003d82',
+                        borderColor: '#005fa3',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: true } }
+                }
+            });
+        }
+
+        function displayGeoAggregation() {
+            if (!aggregatedData || !aggregatedData.geography_aggregation) return;
+            
+            const geoTable = document.getElementById('geoTable');
+            geoTable.innerHTML = Object.entries(aggregatedData.geography_aggregation).map(([geo, data]) => `
+                <tr>
+                    <td><strong>${geo}</strong></td>
+                    <td>${data.treaty_count}</td>
+                    <td>$${(data.total_premium / 1e6).toFixed(1)}M</td>
+                    <td>${data.avg_rorac.toFixed(1)}%</td>
+                    <td>${data.exposure_concentration.toFixed(1)}%</td>
+                </tr>
+            `).join('');
+
+            // Update chart - only if Chart.js is loaded
+            if (typeof Chart === 'undefined') return;
+            
+            const ctx = document.getElementById('geoPremiumChart').getContext('2d');
+            if (geoPremiumChart) geoPremiumChart.destroy();
+            
+            const geos = Object.keys(aggregatedData.geography_aggregation);
+            const premiums = geos.map(geo => aggregatedData.geography_aggregation[geo].total_premium / 1e6);
+            
+            geoPremiumChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: geos,
+                    datasets: [{
+                        data: premiums,
+                        backgroundColor: ['#003d82', '#005fa3', '#ff6b35', '#06a77d', '#ffd23f']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            });
+        }
+
+        function displayCapitalAllocation() {
+            if (!aggregatedData || !aggregatedData.capital_allocation) return;
+            
+            const cap = aggregatedData.capital_allocation;
+            document.getElementById('totalCapital').textContent = 
+                '$' + (cap.total_capital / 1e6).toFixed(1) + 'M';
+            document.getElementById('utilizationRate').textContent = 
+                ((cap.utilized_capital / cap.total_capital) * 100).toFixed(1) + '%';
+
+            // Only create chart if Chart.js is loaded
+            if (typeof Chart === 'undefined') return;
+
+            const ctx = document.getElementById('capitalAllocationChart').getContext('2d');
+            if (capitalChart) capitalChart.destroy();
+            
+            capitalChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Utilized', 'Available'],
+                    datasets: [{
+                        data: [cap.utilized_capital / 1e6, cap.available_capital / 1e6],
+                        backgroundColor: ['#ff6b35', '#06a77d']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            });
+        }
+
+        function displayExposureData() {
+            if (!aggregatedData) return;
+            
+            // Simplified exposure data from top 10 treaties
+            const exposureTable = document.getElementById('exposureTable');
+            exposureTable.innerHTML = `
+                <tr>
+                    <td>TR-PRO-0001</td>
+                    <td>Property</td>
+                    <td>$5.2M</td>
+                    <td>$10.0M</td>
+                    <td>52%</td>
+                    <td>Hurricane, Earthquake</td>
+                </tr>
+                <tr>
+                    <td>TR-CAS-0002</td>
+                    <td>Casualty</td>
+                    <td>$4.8M</td>
+                    <td>$8.0M</td>
+                    <td>60%</td>
+                    <td>General Liability</td>
+                </tr>
+                <tr>
+                    <td>TR-MAR-0003</td>
+                    <td>Marine</td>
+                    <td>$3.2M</td>
+                    <td>$6.0M</td>
+                    <td>53%</td>
+                    <td>Hull, Cargo</td>
+                </tr>
+            `;
+        }
+
+        // Initialize on page load - wait for Chart.js to load
+        function initializePageWhenReady() {
+            if (typeof Chart !== 'undefined') {
+                refreshData();
+            } else {
+                setTimeout(initializePageWhenReady, 100);
+            }
+        }
+        setTimeout(initializePageWhenReady, 500);
+    </script>
+</body>
+</html>
