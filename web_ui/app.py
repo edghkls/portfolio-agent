@@ -30,7 +30,7 @@ def load_portfolio():
 def dashboard():
     """Main dashboard"""
     portfolio = load_portfolio()
-    return render_template('dashboard-enhanced.html', portfolio=portfolio)
+    return render_template('dashboard.html', portfolio=portfolio)
 
 @app.route('/portfolio')
 def portfolio_view():
