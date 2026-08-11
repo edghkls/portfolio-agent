@@ -47,7 +47,7 @@
                     
                     <form id="scenarioForm">
                         <div class="row mb-3">
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <label>Scenario Type</label>
                                 <select class="form-select" id="scenarioType" required>
                                     <option value="">-- Select Scenario --</option>
@@ -57,7 +57,18 @@
                                     <option value="comparison">Scenario Comparison</option>
                                 </select>
                             </div>
-                            <div class="col-md-6" id="paramContainer"></div>
+                            <div class="col-md-4">
+                                <label>Treaty/Segment</label>
+                                <select class="form-select" id="treatySelect">
+                                    <option value="portfolio">Entire Portfolio</option>
+                                    <option value="property">Property</option>
+                                    <option value="casualty">Casualty</option>
+                                    <option value="marine">Marine</option>
+                                    <option value="specialty">Specialty</option>
+                                    <option value="reinsurance">Reinsurance</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4" id="paramContainer"></div>
                         </div>
                         <button type="submit" class="btn btn-primary">Run Simulation</button>
                     </form>
@@ -108,7 +119,9 @@
             e.preventDefault();
             
             const scenarioType = document.getElementById('scenarioType').value;
-            const payload = { simulation_type: scenarioType };
+            const treaty = document.getElementById('treatySelect').value;
+            const treatyLabel = document.getElementById('treatySelect').options[document.getElementById('treatySelect').selectedIndex].text;
+            const payload = { simulation_type: scenarioType, treaty: treaty };
 
             if (scenarioType === 'monte_carlo') {
                 payload.simulations = parseInt(document.getElementById('simulations').value);
@@ -126,13 +139,13 @@
                 });
                 
                 const results = await response.json();
-                displayResults(results);
+                displayResults(results, treatyLabel);
             } catch (error) {
                 console.error('Error:', error);
             }
         });
 
-        function displayResults(results) {
+        function displayResults(results, treatyLabel = 'Entire Portfolio') {
             const container = document.getElementById('resultsContainer');
             let html = '';
 
@@ -140,7 +153,10 @@
             if (results.loss_statistics) {
                 html = `
                     <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.08); margin-top: 20px;">
-                        <h5 style="color: var(--primary-color); margin-bottom: 20px;">📊 Monte Carlo Simulation Results</h5>
+                        <div style="background: #e8f4f8; padding: 12px; border-radius: 5px; margin-bottom: 15px; border-left: 4px solid #003d82;">
+                            <h5 style="color: var(--primary-color); margin: 0;margin-bottom: 5px;">📊 Monte Carlo Simulation Results</h5>
+                            <p style="margin: 0; font-size: 14px;"><strong>Treaty/Segment:</strong> <span style="color: var(--primary-color); font-weight: bold;">${treatyLabel}</span></p>
+                        </div>
                         <div class="row">
                             <div class="col-md-6">
                                 <div style="background: #f0f7ff; padding: 15px; border-radius: 5px; margin-bottom: 10px;">
@@ -167,7 +183,10 @@
             else if (results.event) {
                 html = `
                     <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.08); margin-top: 20px;">
-                        <h5 style="color: var(--primary-color); margin-bottom: 20px;">⚠️ Catastrophe Stress Test Results</h5>
+                        <div style="background: #fff3cd; padding: 12px; border-radius: 5px; margin-bottom: 15px; border-left: 4px solid #ff6b6b;">
+                            <h5 style="color: var(--primary-color); margin: 0; margin-bottom: 5px;">⚠️ Catastrophe Stress Test Results</h5>
+                            <p style="margin: 0; font-size: 14px;"><strong>Treaty/Segment:</strong> <span style="color: var(--primary-color); font-weight: bold;">${treatyLabel}</span></p>
+                        </div>
                         <div class="row">
                             <div class="col-md-4">
                                 <div style="background: #fff3cd; padding: 15px; border-radius: 5px; margin-bottom: 10px; border-left: 4px solid #ff6b6b;">
@@ -211,7 +230,10 @@
             else if (results.lob_impacts) {
                 html = `
                     <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.08); margin-top: 20px;">
-                        <h5 style="color: var(--primary-color); margin-bottom: 20px;">📈 Interest Rate Stress Test Results</h5>
+                        <div style="background: #f0f7ff; padding: 12px; border-radius: 5px; margin-bottom: 15px; border-left: 4px solid #003d82;">
+                            <h5 style="color: var(--primary-color); margin: 0; margin-bottom: 5px;">📈 Interest Rate Stress Test Results</h5>
+                            <p style="margin: 0; font-size: 14px;"><strong>Treaty/Segment:</strong> <span style="color: var(--primary-color); font-weight: bold;">${treatyLabel}</span></p>
+                        </div>
                         <div style="background: #fff3cd; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
                             <p><strong>Scenario:</strong> ${results.scenario}</p>
                             <p><strong>Total Capital Impact:</strong> <span style="color: ${results.total_capital_impact > 0 ? '#27ae60' : '#d9534f'}; font-weight: bold;">$${(results.total_capital_impact / 1e6).toFixed(2)}M</span></p>
@@ -241,7 +263,10 @@
             else if (results.scenarios) {
                 html = `
                     <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.08); margin-top: 20px;">
-                        <h5 style="color: var(--primary-color); margin-bottom: 20px;">🔄 Scenario Comparison Results</h5>
+                        <div style="background: #f0f7ff; padding: 12px; border-radius: 5px; margin-bottom: 15px; border-left: 4px solid #003d82;">
+                            <h5 style="color: var(--primary-color); margin: 0; margin-bottom: 5px;">🔄 Scenario Comparison Results</h5>
+                            <p style="margin: 0; font-size: 14px;"><strong>Treaty/Segment:</strong> <span style="color: var(--primary-color); font-weight: bold;">${treatyLabel}</span></p>
+                        </div>
                         <div style="overflow-x: auto;">
                             <table class="table table-striped">
                                 <thead style="background-color: #f0f7ff;">

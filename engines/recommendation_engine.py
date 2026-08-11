@@ -186,15 +186,23 @@ class RecommendationEngine:
     
     def _get_executive_summary(self, recommendations: List[Dict]) -> Dict:
         """Generate executive summary"""
+        import re
+        
         high_priority = sum(1 for r in recommendations if r['priority'] == 'High')
         total_capital_release = sum(
             float(str(r.get('capital_impact', '$0')).replace('$', '').replace(',', '')) 
             for r in recommendations if 'Release' in str(r.get('capital_impact', ''))
         )
-        total_profit_improvement = sum(
-            float(str(r.get('expected_impact', '$0')).replace('$', '').replace(',', '')) * 0.3
-            for r in recommendations
-        )
+        
+        # Extract numeric values from expected_impact strings
+        total_profit_improvement = 0
+        for r in recommendations:
+            impact_str = str(r.get('expected_impact', '0'))
+            # Extract all numbers from the string
+            numbers = re.findall(r'[-+]?\d*\.?\d+', impact_str)
+            if numbers:
+                # Take the first or largest numeric value found
+                total_profit_improvement += float(numbers[0]) * 0.3
         
         return {
             'key_takeaway': f"{high_priority} high-priority actions to improve portfolio performance",

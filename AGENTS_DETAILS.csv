@@ -1,0 +1,31 @@
+Agent Name,Agent Description,Purpose,Gen AI Tool Required,LLM Used,Programming Language,Framework/Dependencies,Source Data Supported
+"Portfolio Agent","AI-powered query processor with natural language understanding for portfolio analysis","Multi-intent portfolio analysis: top performers, risk analysis, health scoring, optimization, alerts, comparison, LOB analysis, geography analysis","Yes - Intent Detection","Custom Keyword-based NLP (Extensible to GPT-4/Claude)","Python 3.9+","Flask (REST API), Core Python","• Treaty-level data
+• Performance metrics
+• Historical comparisons
+• Multi-dimensional filters
+• Custom queries"
+"Portfolio Optimizer","Financial modeling engine for capital allocation, RORAC calculation, and optimization identification","Identify optimization opportunities, calculate portfolio-level RORAC, recommend capital reallocation, stress-test allocations","No - Rule-based","N/A (Mathematical algorithms)","Python 3.9+","Pandas, NumPy, SciPy, Typing","• Treaty premiums
+• Capital requirements
+• Expected profit data
+• Loss ratios
+• Concentration metrics
+• Performance benchmarks"
+"Recommendation Engine","Multi-factor recommendation generator with priority-based ranking and impact assessment","Generate prioritized actionable recommendations across capital efficiency, performance, diversification, and risk management categories","Optional - LLM for narrative explanations","Custom Weighted Logic (Can integrate LLM for enhanced narrative)","Python 3.9+","Core Python, Datetime, Typing","• Portfolio performance metrics
+• Capital utilization data
+• Risk metrics
+• Historical trends
+• Market benchmarks
+• Concentration analysis"
+"Scenario Analyzer","Statistical simulation engine for Monte Carlo simulations and comprehensive stress testing","Run 1000+ Monte Carlo simulations, stress-test interest rates and catastrophe events, perform what-if analysis, calculate VaR and CVaR","No - Statistical algorithms","N/A (NumPy/SciPy)","Python 3.9+","NumPy, Pandas, SciPy, Datetime","• Treaty loss distributions
+• Premium data
+• Historical loss ratios
+• Volatility metrics
+• Market scenarios
+• Catastrophe data"
+"Anomaly Detector","Rule-based monitoring system with threshold enforcement and real-time alert generation","Real-time anomaly detection with severity levels, alert generation, KPI tracking, continuous portfolio monitoring with automated escalation","No - Threshold-based rules","N/A (If-then rules - extensible to ML)","Python 3.9+","NumPy, Datetime, Core Python","• Capital utilization metrics
+• Claims ratios
+• RORAC performance data
+• Diversification scores
+• Loss concentration
+• Trend analysis
+• Historical baselines"

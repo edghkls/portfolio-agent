@@ -73,14 +73,14 @@
             Promise.all([
                 fetch('/api/portfolio/summary').then(r => r.json()).catch(e => ({})),
                 fetch('/api/portfolio/enhanced').then(r => r.json()).catch(e => ({})),
+                fetch('/api/portfolio/metrics').then(r => r.json()).catch(e => ({})),
                 fetch('/api/recommendations').then(r => r.json()).catch(e => ({}))
             ])
-            .then(([summary, enhanced, recommendations]) => {
+            .then(([summary, enhanced, metrics, recommendations]) => {
                 const output = document.getElementById('reportOutput');
-                
-                // Set default values to prevent undefined.toFixed() errors
                 summary = summary || {};
                 enhanced = enhanced || {};
+                metrics = metrics || {};
                 recommendations = recommendations || {};
                 
                 const portfolio_value = summary.portfolio_value || 256873593;
@@ -92,46 +92,113 @@
                 const capital_efficiency = enhanced.capital_efficiency || 0.85;
                 const underwriting_perf = enhanced.underwriting_perf || 85;
                 
-                const recCount = recommendations.recommendations ? recommendations.recommendations.length : 0;
+                const lobData = metrics.lob_breakdown || {
+                    'Property': 45000000, 'Casualty': 85000000, 'Marine': 32000000, 'Specialty': 54000000, 'Reinsurance': 40000000
+                };
+                const geoData = metrics.geography_breakdown || {
+                    'North America': 102000000, 'Europe': 64000000, 'Asia Pacific': 51000000, 'Latin America': 26000000, 'Africa/ME': 13000000
+                };
                 
-                output.innerHTML = `
-                    <div style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.08);">
-                        <h4>📋 Portfolio Executive Summary</h4>
-                        <p><strong>Generated:</strong> ${new Date().toLocaleDateString()}</p>
-                        <hr>
-                        <h5>Portfolio Overview</h5>
-                        <table class="table table-sm">
-                            <tr><td><strong>Portfolio Value</strong></td><td>$${(portfolio_value / 1e6).toFixed(1)}M</td></tr>
-                            <tr><td><strong>Capital Utilization</strong></td><td>${(capital_utilization || 0).toFixed(1)}% (Target: 75-95%)</td></tr>
-                            <tr><td><strong>Average RORAC</strong></td><td>${(average_rorac || 0).toFixed(1)}% (Target: 20%+)</td></tr>
-                            <tr><td><strong>Diversification Score</strong></td><td>${(diversification_score || 0).toFixed(2)} / 1.0 (Target: 0.7+)</td></tr>
-                        </table>
-                        <hr>
-                        <h5>Enhanced Performance Metrics</h5>
-                        <table class="table table-sm">
-                            <tr><td><strong>Premium Growth YoY</strong></td><td>${(premium_growth || 0).toFixed(1)}%</td></tr>
-                            <tr><td><strong>Claims Ratio</strong></td><td>${(claims_ratio || 0).toFixed(1)}%</td></tr>
-                            <tr><td><strong>Capital Efficiency</strong></td><td>$${(capital_efficiency || 0).toFixed(2)}K per $1M</td></tr>
-                            <tr><td><strong>Underwriting Performance</strong></td><td>${(underwriting_perf || 0).toFixed(0)}%</td></tr>
-                        </table>
-                        <hr>
-                        <h5>Strategic Recommendations (${recCount} items)</h5>
-                        <ul>
-                            ${recommendations.recommendations && recommendations.recommendations.length > 0 ? recommendations.recommendations.map((r, i) => `
-                                <li><strong>${r.title || 'Recommendation'}</strong> (${r.priority || 'Medium'}) - Confidence: ${((r.confidence_score || 0.8) * 100).toFixed(0)}%<br/>
-                                    <small class="text-muted">${r.business_justification || 'No details available'}</small></li>
-                            `).join('') : '<li>No recommendations available at this time</li>'}
-                        </ul>
-                        <hr>
-                        <h5>Summary</h5>
-                        <p>Portfolio is performing well with RORAC at ${(average_rorac || 0).toFixed(0)}% and capital utilization at ${(capital_utilization || 0).toFixed(0)}%. 
-                        Diversification score of ${(diversification_score || 0).toFixed(2)} indicates ${(diversification_score || 0) > 0.7 ? 'healthy' : 'concentrated'} portfolio distribution.</p>
-                        <button class="btn btn-primary mt-3" onclick="window.print()">🖨️ Print Report</button>
-                    </div>
-                `;
+                const totalPortfolio = Object.values(lobData).reduce((a, b) => a + b, 0);
+                const topLOB = Object.entries(lobData).sort((a, b) => b[1] - a[1])[0];
+                const concentration = (topLOB[1] / totalPortfolio) * 100;
+                
+                const optimizationPotential = Math.max(0, 95 - capital_utilization) + Math.max(0, 25 - (average_rorac / 10));
+                const riskScore = diversification_score > 0.7 ? 'Low' : diversification_score > 0.5 ? 'Moderate' : 'High';
+                const underwritingRating = underwriting_perf > 90 ? 'Excellent' : underwriting_perf > 75 ? 'Good' : 'Needs Improvement';
+                const claimsPerformance = claims_ratio < 55 ? 'Excellent' : claims_ratio < 65 ? 'Good' : 'Needs Improvement';
+                const availableCapacity = Math.max(0, 100 - capital_utilization);
+                
+                const expectedDealRORAC = average_rorac * 0.95;
+                const riskScoreNumeric = riskScore === 'Low' ? 8.5 : riskScore === 'Moderate' ? 7.0 : 5.5;
+                const capacityScore = Math.min(availableCapacity, 10);
+                const strategicFitScore = diversification_score > 0.7 ? 8.0 : 6.5;
+                
+                // Proper weighted deal merit score calculation
+                const roracComponent = (expectedDealRORAC / 300) * 100 * 0.4;
+                const riskComponent = (riskScoreNumeric / 10) * 100 * 0.25;
+                const capacityComponent = (capacityScore / 10) * 100 * 0.20;
+                const strategicFitComponent = (strategicFitScore / 10) * 100 * 0.15;
+                const portfolioContributionScore = (roracComponent + riskComponent + capacityComponent + strategicFitComponent).toFixed(1);
+                
+                const synergyScore = Math.min(100, (capital_efficiency * 50) + (diversification_score * 50)).toFixed(1);
+                
+                let html = '<div style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.08);">';
+                html += '<h2 style="color: var(--primary-color); margin-bottom: 10px;">📋 Portfolio Executive Summary Report</h2>';
+                html += '<p><strong>Report Date:</strong> ' + new Date().toLocaleDateString() + ' | <strong>Portfolio Value:</strong> $' + (portfolio_value / 1e6).toFixed(1) + 'M</p>';
+                html += '<hr><h3 style="color: var(--primary-color); margin-top: 25px; border-bottom: 2px solid #ff6b35; padding-bottom: 10px;">1. CONTINUOUS PORTFOLIO ASSESSMENT</h3>';
+                html += '<p style="font-style: italic; color: #555; margin-bottom: 15px;">Continuously assess portfolio composition, simulate trade-offs, and recommend underwriting, capacity, and placement actions in line with return, risk, and capital objectives</p>';
+                
+                html += '<h5 style="color: #003d82; margin-top: 15px;">A. Portfolio Composition Analysis</h5>';
+                html += '<table class="table table-sm" style="margin-bottom: 15px;"><tr style="background-color: #f8f9fa;"><td><strong>Line of Business</strong></td><td><strong>Premium Value</strong></td><td><strong>% of Portfolio</strong></td><td><strong>Concentration Status</strong></td></tr>';
+                Object.entries(lobData).sort((a, b) => b[1] - a[1]).forEach(([lob, value]) => {
+                    const pct = (value / totalPortfolio) * 100;
+                    const status = pct > 25 ? '⚠️ High' : pct > 15 ? '✓ Moderate' : '✓ Diversified';
+                    html += '<tr><td>' + lob + '</td><td>$' + (value / 1e6).toFixed(1) + 'M</td><td>' + pct.toFixed(1) + '%</td><td>' + status + '</td></tr>';
+                });
+                html += '</table>';
+                html += '<p style="background: #f0f8ff; padding: 10px; border-left: 3px solid #003d82; margin-bottom: 15px;"><strong>Finding:</strong> Top LOB concentration at ' + concentration.toFixed(1) + '% (' + topLOB[0] + '). Portfolio composition is ' + (concentration > 30 ? 'concentrated' : 'well-diversified') + '.</p>';
+                
+                html += '<h5 style="color: #003d82; margin-top: 15px;">B. Trade-off Simulation & Optimization</h5>';
+                html += '<table class="table table-sm" style="margin-bottom: 15px;"><tr style="background-color: #f8f9fa;"><td><strong>Metric</strong></td><td><strong>Current</strong></td><td><strong>Target</strong></td><td><strong>Variance</strong></td><td><strong>Status</strong></td></tr>';
+                html += '<tr><td><strong>Capital Utilization</strong></td><td>' + capital_utilization.toFixed(1) + '%</td><td>75-95%</td><td>' + (capital_utilization - 85).toFixed(1) + '%</td><td>' + (capital_utilization > 100 ? '🔴 Over-utilized' : capital_utilization > 95 ? '🟡 At Upper Limit' : '🟢 Optimal') + '</td></tr>';
+                html += '<tr><td><strong>Average RORAC</strong></td><td>' + (average_rorac / 10).toFixed(1) + '%</td><td>20%+ (Scaled)</td><td>' + ((average_rorac / 10) - 20).toFixed(1) + '%</td><td>' + (average_rorac > 200 ? '🟢 Strong' : '🟡 Monitor') + '</td></tr>';
+                html += '<tr><td><strong>Diversification Score</strong></td><td>' + diversification_score.toFixed(2) + '</td><td>0.70+</td><td>' + (diversification_score - 0.70).toFixed(2) + '</td><td>' + (diversification_score > 0.7 ? '🟢 Healthy' : '🟡 Concentrate Risk') + '</td></tr>';
+                html += '</table>';
+                
+                html += '<h5 style="color: #003d82; margin-top: 15px;">C. Underwriting & Capacity Assessment</h5>';
+                html += '<table class="table table-sm" style="margin-bottom: 15px;"><tr style="background-color: #f8f9fa;"><td><strong>Assessment</strong></td><td><strong>Current Value</strong></td><td><strong>Rating</strong></td><td><strong>Action Required</strong></td></tr>';
+                html += '<tr><td><strong>Underwriting Performance</strong></td><td>' + underwriting_perf.toFixed(0) + '%</td><td>' + underwritingRating + '</td><td>' + (underwriting_perf < 75 ? '⚠️ Improve UW Discipline' : '✓ Continue Current Strategy') + '</td></tr>';
+                html += '<tr><td><strong>Claims Performance</strong></td><td>' + claims_ratio.toFixed(1) + '%</td><td>' + claimsPerformance + '</td><td>' + (claims_ratio > 65 ? '⚠️ Review Pricing' : '✓ Acceptable') + '</td></tr>';
+                html += '<tr><td><strong>Available Capacity</strong></td><td>' + availableCapacity.toFixed(1) + '%</td><td>' + (availableCapacity > 10 ? 'Adequate' : 'Limited') + '</td><td>' + (availableCapacity > 10 ? '✓ Ready for Growth' : '⚠️ Expansion Constrained') + '</td></tr>';
+                html += '</table>';
+                
+                html += '<hr style="margin: 30px 0;"><h3 style="color: var(--primary-color); margin-top: 25px; border-bottom: 2px solid #06a77d; padding-bottom: 10px;">2. INCREMENTAL DEAL IMPACT ASSESSMENT</h3>';
+                html += '<p style="font-style: italic; color: #555; margin-bottom: 15px;">Review new opportunities primarily on standalone merits to evaluate individual deal contribution to portfolio performance</p>';
+                
+                html += '<h5 style="color: #003d82; margin-top: 15px;">A. Standalone Deal Merit Analysis Framework</h5>';
+                html += '<table class="table table-sm" style="margin-bottom: 15px;"><tr style="background-color: #f8f9fa;"><td><strong>Evaluation Criterion</strong></td><td><strong>Standalone Score</strong></td><td><strong>Weight</strong></td><td><strong>Weighted Impact</strong></td></tr>';
+                html += '<tr><td>Expected Return (RORAC)</td><td>' + expectedDealRORAC.toFixed(0) + '%</td><td>40%</td><td>' + roracComponent.toFixed(1) + '</td></tr>';
+                html += '<tr><td>Risk Profile (vs Portfolio)</td><td>' + riskScoreNumeric + '/10</td><td>25%</td><td>' + riskComponent.toFixed(1) + '</td></tr>';
+                html += '<tr><td>Capacity Requirement</td><td>' + availableCapacity.toFixed(1) + '% Available</td><td>20%</td><td>' + capacityComponent.toFixed(1) + '</td></tr>';
+                html += '<tr><td>Strategic Fit (LOB/Geo)</td><td>' + strategicFitScore + '/10</td><td>15%</td><td>' + strategicFitComponent.toFixed(1) + '</td></tr>';
+                html += '<tr style="background-color: #f0f8ff; font-weight: bold;"><td colspan="3"><strong>TOTAL DEAL MERIT SCORE</strong></td><td>' + portfolioContributionScore + '/100</td></tr>';
+                html += '</table>';
+                
+                html += '<h5 style="color: #003d82; margin-top: 15px;">B. Portfolio Contribution Metrics</h5>';
+                html += '<table class="table table-sm" style="margin-bottom: 15px;"><tr style="background-color: #f8f9fa;"><td><strong>Impact Measure</strong></td><td><strong>Current Portfolio</strong></td><td><strong>Post-Deal Projection</strong></td><td><strong>Change</strong></td><td><strong>Assessment</strong></td></tr>';
+                html += '<tr><td>Portfolio RORAC</td><td>' + (average_rorac / 10).toFixed(1) + '%</td><td>' + ((average_rorac / 10) * 0.98).toFixed(1) + '%</td><td>-0.2% (Conservative)</td><td>✓ Maintains Returns</td></tr>';
+                html += '<tr><td>Capital Utilization</td><td>' + capital_utilization.toFixed(1) + '%</td><td>' + Math.min(99.9, capital_utilization + 2.5).toFixed(1) + '%</td><td>+2.5% (Est.)</td><td>' + (capital_utilization + 2.5 > 100 ? '⚠️ Over-Capacity' : '✓ Within Limits') + '</td></tr>';
+                html += '<tr><td>Premium Growth Impact</td><td>' + premium_growth.toFixed(1) + '%</td><td>' + (premium_growth + 1.5).toFixed(1) + '%</td><td>+1.5%</td><td>✓ Accelerates Growth</td></tr>';
+                html += '</table>';
+                
+                html += '<h5 style="color: #003d82; margin-top: 15px;">C. Deal Acceptance Decision Matrix</h5>';
+                html += '<table class="table table-sm" style="margin-bottom: 15px;"><tr style="background-color: #f8f9fa;"><td><strong>Criterion</strong></td><td><strong>Threshold</strong></td><td><strong>Actual</strong></td><td><strong>Pass/Fail</strong></td></tr>';
+                html += '<tr><td>Minimum Expected RORAC</td><td>18%</td><td>' + expectedDealRORAC.toFixed(1) + '%</td><td>' + (expectedDealRORAC >= 180 ? '🟢 PASS' : '🔴 FAIL') + '</td></tr>';
+                html += '<tr><td>Maximum Risk Profile</td><td>Moderate or Better</td><td>' + riskScore + '</td><td>' + (riskScore !== 'High' ? '🟢 PASS' : '🔴 FAIL') + '</td></tr>';
+                html += '<tr><td>Available Capacity Required</td><td>Minimum 5%</td><td>' + availableCapacity.toFixed(1) + '%</td><td>' + (availableCapacity >= 5 ? '🟢 PASS' : '🔴 FAIL') + '</td></tr>';
+                html += '<tr><td>Deal Merit Score</td><td>Minimum 50/100</td><td>' + portfolioContributionScore + '/100</td><td>' + (parseFloat(portfolioContributionScore) >= 50 ? '🟢 PASS' : '🟡 CAUTION') + '</td></tr>';
+                html += '<tr style="background-color: #fff9e6; font-weight: bold;"><td colspan="3"><strong>OVERALL DEAL RECOMMENDATION</strong></td><td style="color: #006400; font-weight: bold;">' + (parseFloat(portfolioContributionScore) >= 65 ? '✅ ACCEPT' : parseFloat(portfolioContributionScore) >= 50 ? '✅ ACCEPT WITH CONDITIONS' : '⚠️ REQUIRES REVIEW') + '</td></tr>';
+                html += '</table>';
+                
+                html += '<hr><h3 style="color: var(--primary-color); border-bottom: 2px solid #3498db; padding-bottom: 10px;">STRATEGIC RECOMMENDATIONS</h3>';
+                html += '<table class="table table-sm" style="margin-top: 15px; margin-bottom: 15px;"><tr style="background-color: #f8f9fa;"><td><strong>Priority</strong></td><td><strong>Action Item</strong></td><td><strong>Expected Impact</strong></td></tr>';
+                if (recommendations.recommendations && recommendations.recommendations.length > 0) {
+                    recommendations.recommendations.slice(0, 5).forEach((r, i) => {
+                        html += '<tr><td><strong>' + (r.priority || 'Medium') + '</strong></td><td>' + (r.title || 'Recommendation') + '</td><td>' + (r.estimated_profit_impact ? '~$' + (r.estimated_profit_impact / 1e6).toFixed(1) + 'M' : 'TBD') + '</td></tr>';
+                    });
+                } else {
+                    html += '<tr><td colspan="3">No specific recommendations at this time</td></tr>';
+                }
+                html += '</table>';
+                
+                html += '<hr><p style="color: #666; font-size: 0.9rem; margin-top: 20px;"><strong>Report Summary:</strong> The portfolio is operating with ' + (capital_utilization > 95 ? 'high' : 'moderate') + ' capital utilization and strong RORAC performance. Continuous assessment indicates ' + (concentration > 25 ? 'concentration risk' : 'healthy diversification') + ' across LOBs.</p>';
+                html += '<button class="btn btn-primary mt-3" onclick="window.print()">🖨️ Print Report</button></div>';
+                
+                output.innerHTML = html;
             })
             .catch(e => {
-                document.getElementById('reportOutput').innerHTML = `<div class="alert alert-danger">Error loading report: ${e.message}</div>`;
+                document.getElementById('reportOutput').innerHTML = '<div class="alert alert-danger">Error loading report: ' + e.message + '</div>';
             });
         }
 
@@ -201,33 +268,122 @@
         }
 
         function generateOptimizationReport() {
-            fetch('/api/analyze-portfolio', { method: 'POST' })
-                .then(r => r.json())
-                .then(data => {
-                    const output = document.getElementById('reportOutput');
-                    const opps = data.optimization_opportunities || [];
-                    output.innerHTML = `
-                        <div style="background: white; padding: 30px; border-radius: 8px;">
-                            <h4>🚀 Portfolio Optimization Report</h4>
-                            <p><strong>Generated:</strong> ${new Date().toLocaleDateString()}</p>
-                            <hr>
-                            <h5>Portfolio Health Status: ${data.portfolio_health || 'Strong'}</h5>
-                            <h5>Key Opportunities (${opps.length} items)</h5>
-                            ${opps.map((opp, i) => `
-                                <div style="margin-bottom: 15px; padding: 15px; background: #f8f9fa; border-radius: 6px; border-left: 4px solid #ff6b35;">
-                                    <p><strong style="color: #003d82;">${i+1}. ${opp.action}</strong></p>
-                                    <p class="text-muted">${opp.reason}</p>
-                                    <p><strong>Potential Impact:</strong> <span style="color: #06a77d;">${opp.potential_impact}</span></p>
-                                    <span class="badge ${opp.priority === 'High' ? 'bg-danger' : opp.priority === 'Medium' ? 'bg-warning' : 'bg-info'}">${opp.priority} Priority</span>
-                                </div>
-                            `).join('')}
-                            <button class="btn btn-primary mt-3" onclick="window.print()">🖨️ Print Report</button>
-                        </div>
-                    `;
-                })
-                .catch(e => {
-                    document.getElementById('reportOutput').innerHTML = `<div class="alert alert-danger">Error generating optimization report: ${e.message}</div>`;
-                });
+            Promise.all([
+                fetch('/api/portfolio/summary').then(r => r.json()),
+                fetch('/api/portfolio/enhanced').then(r => r.json()),
+                fetch('/api/portfolio/metrics').then(r => r.json()),
+                fetch('/api/analyze-portfolio', { method: 'POST' }).then(r => r.json())
+            ]).then(([summary, enhanced, metrics, optimization]) => {
+                const output = document.getElementById('reportOutput');
+                const opps = optimization.optimization_opportunities || [];
+                
+                // Calculate metrics
+                const portfolio_value = summary.portfolio_value || 256800000;
+                const capital_utilization = summary.capital_utilization || 100.3;
+                const average_rorac = summary.average_rorac || 234.78;
+                const premium_growth = enhanced.premium_growth || 12.0;
+                const claims_ratio = enhanced.claims_ratio || 58.0;
+                const underwriting_perf = enhanced.underwriting_perf || 85;
+                const diversification_score = summary.diversification_score || 0.76;
+                const lobData = metrics.lob_breakdown || {};
+                const totalPortfolio = Object.values(lobData).reduce((a, b) => a + b, 0);
+                
+                // Group opportunities by priority
+                const highPriority = opps.filter(o => o.priority === 'High');
+                const mediumPriority = opps.filter(o => o.priority === 'Medium');
+                const lowPriority = opps.filter(o => o.priority === 'Low');
+                
+                // Calculate potential improvements
+                const potentialRORAC = average_rorac * 1.15; // Estimated 15% improvement
+                const potentialCapitalGain = Math.max(0, 95 - capital_utilization) * 2.5; // Million $ savings
+                const potentialGrowthIncrease = premium_growth * 1.25; // 25% acceleration
+                
+                let html = '<div style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.08);">';
+                html += '<h2 style="color: var(--primary-color); margin-bottom: 10px;">🚀 Portfolio Optimization Report</h2>';
+                html += '<p><strong>Report Date:</strong> ' + new Date().toLocaleDateString() + ' | <strong>Portfolio Health:</strong> ' + (optimization.portfolio_health || 'Strong') + '</p>';
+                html += '<hr>';
+                
+                // Executive Summary Dashboard
+                html += '<h3 style="color: var(--primary-color); margin-top: 25px; border-bottom: 2px solid #ff6b35; padding-bottom: 10px;">1. OPTIMIZATION OPPORTUNITIES SUMMARY</h3>';
+                html += '<div class="row" style="margin: 20px 0;">';
+                html += '<div class="col-md-3" style="text-align: center; padding: 15px; background: #fff3e0; border-radius: 6px; margin-right: 10px; margin-bottom: 10px;">';
+                html += '<h4 style="color: #ff6b35; margin: 0;">' + opps.length + '</h4><p style="margin: 0; color: #666;">Total Opportunities</p></div>';
+                html += '<div class="col-md-3" style="text-align: center; padding: 15px; background: #ffebee; border-radius: 6px; margin-right: 10px; margin-bottom: 10px;">';
+                html += '<h4 style="color: #d32f2f; margin: 0;">' + highPriority.length + '</h4><p style="margin: 0; color: #666;">High Priority</p></div>';
+                html += '<div class="col-md-3" style="text-align: center; padding: 15px; background: #fff9c4; border-radius: 6px; margin-right: 10px; margin-bottom: 10px;">';
+                html += '<h4 style="color: #f57f17; margin: 0;">' + mediumPriority.length + '</h4><p style="margin: 0; color: #666;">Medium Priority</p></div>';
+                html += '<div class="col-md-3" style="text-align: center; padding: 15px; background: #e8f5e9; border-radius: 6px; margin-bottom: 10px;">';
+                html += '<h4 style="color: #388e3c; margin: 0;">' + lowPriority.length + '</h4><p style="margin: 0; color: #666;">Low Priority</p></div>';
+                html += '</div>';
+                
+                // Projected Impact
+                html += '<h4 style="color: #003d82; margin-top: 20px;">Projected Portfolio Improvement (if all optimizations implemented)</h4>';
+                html += '<table class="table table-sm" style="margin-bottom: 15px;"><tr style="background-color: #f8f9fa;"><td><strong>Metric</strong></td><td><strong>Current</strong></td><td><strong>Potential</strong></td><td><strong>Improvement</strong></td><td><strong>Impact</strong></td></tr>';
+                html += '<tr><td><strong>Average RORAC</strong></td><td>' + (average_rorac / 10).toFixed(1) + '%</td><td>' + (potentialRORAC / 10).toFixed(1) + '%</td><td>+' + ((potentialRORAC - average_rorac) / 10).toFixed(1) + '%</td><td style="color: #06a77d; font-weight: bold;">↑ ' + ((((potentialRORAC - average_rorac) / average_rorac) * 100).toFixed(1)) + '%</td></tr>';
+                html += '<tr><td><strong>Premium Growth Rate</strong></td><td>' + premium_growth.toFixed(1) + '%</td><td>' + potentialGrowthIncrease.toFixed(1) + '%</td><td>+' + (potentialGrowthIncrease - premium_growth).toFixed(1) + '%</td><td style="color: #06a77d; font-weight: bold;">↑ ' + (((potentialGrowthIncrease - premium_growth) / premium_growth * 100).toFixed(1)) + '%</td></tr>';
+                html += '<tr><td><strong>Capital Efficiency Gain</strong></td><td>' + capital_utilization.toFixed(1) + '%</td><td>' + Math.min(94, capital_utilization - potentialCapitalGain / 10).toFixed(1) + '%</td><td>-' + (potentialCapitalGain / 10).toFixed(1) + '%</td><td style="color: #06a77d; font-weight: bold;">$' + potentialCapitalGain.toFixed(1) + 'M freed</td></tr>';
+                html += '<tr style="background-color: #f0f8ff; font-weight: bold;"><td colspan="5">✅ Portfolio optimization could drive 15-25% performance improvement</td></tr>';
+                html += '</table>';
+                
+                // High Priority Opportunities
+                if (highPriority.length > 0) {
+                    html += '<hr style="margin: 30px 0;"><h3 style="color: #d32f2f; border-bottom: 2px solid #d32f2f; padding-bottom: 10px;">2. HIGH PRIORITY ACTIONS (Immediate - 0-30 days)</h3>';
+                    html += '<table class="table table-sm" style="margin-bottom: 15px;"><tr style="background-color: #ffebee;"><td><strong>#</strong></td><td><strong>Action</strong></td><td><strong>Reason</strong></td><td><strong>Potential Impact</strong></td><td><strong>Status</strong></td></tr>';
+                    highPriority.forEach((opp, i) => {
+                        html += '<tr><td><strong>' + (i+1) + '</strong></td><td>' + opp.action + '</td><td>' + opp.reason + '</td><td><span style="color: #06a77d; font-weight: bold;">' + opp.potential_impact + '</span></td><td><span class="badge bg-danger">HIGH</span></td></tr>';
+                    });
+                    html += '</table>';
+                }
+                
+                // Medium Priority Opportunities
+                if (mediumPriority.length > 0) {
+                    html += '<h3 style="color: #f57f17; border-bottom: 2px solid #f57f17; padding-bottom: 10px; margin-top: 25px;">3. MEDIUM PRIORITY ACTIONS (Short-term - 30-60 days)</h3>';
+                    html += '<table class="table table-sm" style="margin-bottom: 15px;"><tr style="background-color: #fff9c4;"><td><strong>#</strong></td><td><strong>Action</strong></td><td><strong>Reason</strong></td><td><strong>Potential Impact</strong></td><td><strong>Status</strong></td></tr>';
+                    mediumPriority.forEach((opp, i) => {
+                        html += '<tr><td><strong>' + (i+1) + '</strong></td><td>' + opp.action + '</td><td>' + opp.reason + '</td><td><span style="color: #06a77d; font-weight: bold;">' + opp.potential_impact + '</span></td><td><span class="badge bg-warning">MEDIUM</span></td></tr>';
+                    });
+                    html += '</table>';
+                }
+                
+                // Low Priority Opportunities
+                if (lowPriority.length > 0) {
+                    html += '<h3 style="color: #1976d2; border-bottom: 2px solid #1976d2; padding-bottom: 10px; margin-top: 25px;">4. LOW PRIORITY ACTIONS (Long-term - 60+ days)</h3>';
+                    html += '<table class="table table-sm" style="margin-bottom: 15px;"><tr style="background-color: #e3f2fd;"><td><strong>#</strong></td><td><strong>Action</strong></td><td><strong>Reason</strong></td><td><strong>Potential Impact</strong></td><td><strong>Status</strong></td></tr>';
+                    lowPriority.forEach((opp, i) => {
+                        html += '<tr><td><strong>' + (i+1) + '</strong></td><td>' + opp.action + '</td><td>' + opp.reason + '</td><td><span style="color: #06a77d; font-weight: bold;">' + opp.potential_impact + '</span></td><td><span class="badge bg-info">LOW</span></td></tr>';
+                    });
+                    html += '</table>';
+                }
+                
+                // Implementation Roadmap
+                html += '<hr style="margin: 30px 0;"><h3 style="color: var(--primary-color); border-bottom: 2px solid #06a77d; padding-bottom: 10px;">5. IMPLEMENTATION ROADMAP</h3>';
+                html += '<table class="table table-sm" style="margin-bottom: 15px;"><tr style="background-color: #f8f9fa;"><td><strong>Phase</strong></td><td><strong>Timeline</strong></td><td><strong>Actions</strong></td><td><strong>Key Deliverables</strong></td><td><strong>Success Metrics</strong></td></tr>';
+                html += '<tr><td style="font-weight: bold; color: #d32f2f;">Phase 1</td><td>0-30 days</td><td>Execute ' + highPriority.length + ' high-priority actions</td><td>Action plans, resource allocation</td><td>20%+ improvement in RORAC</td></tr>';
+                html += '<tr><td style="font-weight: bold; color: #f57f17;">Phase 2</td><td>30-60 days</td><td>Complete ' + mediumPriority.length + ' medium-priority actions</td><td>Process improvements, rebalancing</td><td>Reduced capital utilization by 5%</td></tr>';
+                html += '<tr><td style="font-weight: bold; color: #1976d2;">Phase 3</td><td>60+ days</td><td>Implement ' + lowPriority.length + ' low-priority actions</td><td>Strategic initiatives, enhancements</td><td>Premium growth +5-10%</td></tr>';
+                html += '</table>';
+                
+                // Key Metrics Dashboard
+                html += '<h3 style="color: var(--primary-color); border-bottom: 2px solid #06a77d; padding-bottom: 10px; margin-top: 25px;">6. CURRENT PORTFOLIO HEALTH SCORECARD</h3>';
+                html += '<table class="table table-sm" style="margin-bottom: 15px;"><tr style="background-color: #f8f9fa;"><td><strong>Metric</strong></td><td><strong>Value</strong></td><td><strong>Target</strong></td><td><strong>Health Status</strong></td><td><strong>Action</strong></td></tr>';
+                html += '<tr><td><strong>Capital Utilization</strong></td><td>' + capital_utilization.toFixed(1) + '%</td><td>75-95%</td><td>' + (capital_utilization > 100 ? '🔴 Over-utilized' : capital_utilization > 95 ? '🟡 At Upper Limit' : '🟢 Optimal') + '</td><td>' + (capital_utilization > 100 ? 'Reduce exposure' : 'Maintain') + '</td></tr>';
+                html += '<tr><td><strong>Average RORAC</strong></td><td>' + (average_rorac / 10).toFixed(1) + '%</td><td>20%+</td><td>' + (average_rorac / 10 > 20 ? '🟢 Strong' : '🟡 Monitor') + '</td><td>' + (average_rorac / 10 < 20 ? 'Optimize pricing' : 'Sustain') + '</td></tr>';
+                html += '<tr><td><strong>Diversification Score</strong></td><td>' + diversification_score.toFixed(2) + '</td><td>0.70+</td><td>' + (diversification_score > 0.7 ? '🟢 Healthy' : '🟡 Concentrate') + '</td><td>' + (diversification_score < 0.7 ? 'Add LOBs/Geos' : 'Maintain') + '</td></tr>';
+                html += '<tr><td><strong>Premium Growth Rate</strong></td><td>' + premium_growth.toFixed(1) + '%</td><td>10%+</td><td>' + (premium_growth > 10 ? '🟢 Strong' : '🟡 Monitor') + '</td><td>' + (premium_growth < 10 ? 'Accelerate new business' : 'Sustain') + '</td></tr>';
+                html += '<tr><td><strong>Claims Ratio</strong></td><td>' + claims_ratio.toFixed(1) + '%</td><td><55%</td><td>' + (claims_ratio < 55 ? '🟢 Excellent' : claims_ratio < 65 ? '🟡 Good' : '🔴 Needs Action') + '</td><td>' + (claims_ratio > 65 ? 'Review pricing' : 'Continue') + '</td></tr>';
+                html += '</table>';
+                
+                html += '<div style="margin-top: 30px; padding: 15px; background: #f0f8ff; border-radius: 6px; border-left: 4px solid #003d82;">';
+                html += '<p style="margin: 0;"><strong>📌 Key Takeaway:</strong> Portfolio has ' + opps.length + ' optimization opportunities. Prioritized execution could improve RORAC by ~15%, accelerate growth by ~25%, and free up ~$' + potentialCapitalGain.toFixed(1) + 'M in capital.</p>';
+                html += '</div>';
+                
+                html += '<button class="btn btn-primary mt-3" onclick="window.print()">🖨️ Print Report</button>';
+                html += '</div>';
+                
+                output.innerHTML = html;
+            }).catch(e => {
+                document.getElementById('reportOutput').innerHTML = '<div class="alert alert-danger">Error generating optimization report: ' + e.message + '</div>';
+            });
         }
 
         function generateComplianceReport() {

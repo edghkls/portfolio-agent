@@ -492,58 +492,436 @@
             </div>
         </div>
 
-        <!-- Top Performers -->
-        <h3 class="section-title">Top Performers & Risk Metrics</h3>
+        <!-- PORTFOLIO HEALTH RISKS ASSESSMENT -->
+        <h3 class="section-title">⚠️ Key Portfolio Risks</h3>
+        <div class="row mb-4" id="portfolioRisks">
+            <!-- Risks populated by JavaScript -->
+        </div>
+
+        <!-- PORTFOLIO COMPOSITION SUMMARY -->
+        <h3 class="section-title">📋 Portfolio Composition Summary</h3>
         <div class="row mb-4">
-            <div class="col-lg-6">
-                <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.08);">
-                    <h5 style="color: var(--primary-color); font-weight: 600; margin-bottom: 15px;">🏆 Top 5 Treaties</h5>
+            <div class="col-lg-4">
+                <div style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.08);">
+                    <h5 style="color: var(--primary-color); font-weight: 600; margin-bottom: 10px; font-size: 0.95rem;">📊 Capital Utilization</h5>
+                    <div style="text-align: center; padding: 10px;">
+                        <p style="font-size: 2rem; font-weight: bold; color: var(--primary-color); margin: 0;" id="compositionCapUt">--</p>
+                        <p style="font-size: 0.8rem; color: #666; margin: 5px 0;">Target: 75-95%</p>
+                        <div style="margin-top: 10px; height: 6px; background: #e0e0e0; border-radius: 3px; overflow: hidden;">
+                            <div id="capUtBar" style="height: 100%; background: #06a77d; width: 0%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.08);">
+                    <h5 style="color: var(--primary-color); font-weight: 600; margin-bottom: 10px; font-size: 0.95rem;">🎯 Concentration Level</h5>
+                    <div style="text-align: center; padding: 10px;">
+                        <p style="font-size: 1.5rem; font-weight: bold; color: #ff6b35; margin: 0;" id="compositionConc">--</p>
+                        <p style="font-size: 0.75rem; color: #666; margin: 5px 0;">Based on diversification score and LOB spread</p>
+                        <div style="margin-top: 10px; padding: 8px; background: #fff3e0; border-radius: 5px; border-left: 3px solid #ff6b35;">
+                            <p style="font-size: 0.7rem; color: #666; margin: 0; font-weight: 600;">Status</p>
+                            <p style="color: #ff6b35; font-weight: bold; font-size: 0.85rem; margin: 2px 0;" id="concStatus">Moderate</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.08);">
+                    <h5 style="color: var(--primary-color); font-weight: 600; margin-bottom: 10px; font-size: 0.95rem;">📈 Performance Trend</h5>
+                    <div style="text-align: center; padding: 10px;">
+                        <p style="font-size: 1.5rem; font-weight: bold; color: #06a77d; margin: 0;" id="performanceTrend">🟢 Improving</p>
+                        <p style="font-size: 0.75rem; color: #666; margin: 5px 0;">RORAC trajectory assessment</p>
+                        <div style="margin-top: 10px; padding: 8px; background: #e8f5e9; border-radius: 5px; border-left: 3px solid #06a77d;">
+                            <p style="font-size: 0.7rem; color: #666; margin: 0; font-weight: 600;">3-Month Change</p>
+                            <p style="color: #06a77d; font-weight: bold; font-size: 0.85rem; margin: 2px 0;" id="trendChange">+2.5%</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Performers -->
+        <h3 class="section-title">🏥 Portfolio Health & Detailed Analysis</h3>
+        <div class="row mb-4">
+            <div class="col-lg-3">
+                <div style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.08); height: 100%;">
+                    <h5 style="color: var(--primary-color); font-weight: 600; margin-bottom: 12px; font-size: 0.95rem;">🏆 Top Treaties</h5>
                     <div id="topTreaties" class="table-responsive">
-                        <table class="table table-sm table-hover">
+                        <table class="table table-sm table-hover" style="margin: 0; font-size: 0.8rem;">
                             <thead style="background-color: #f8f9fa;">
                                 <tr>
                                     <th>Treaty</th>
                                     <th>RORAC</th>
-                                    <th>Premium</th>
                                 </tr>
                             </thead>
                             <tbody id="treatiesBody">
-                                <tr><td colspan="3" class="text-center text-muted">Loading...</td></tr>
+                                <tr><td colspan="2" class="text-center text-muted">Loading...</td></tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>
-            <div class="col-lg-6">
-                <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.08);">
-                    <h5 style="color: var(--primary-color); font-weight: 600; margin-bottom: 15px;">⚠️ Risk Assessment</h5>
-                    <div style="margin-bottom: 15px;">
-                        <h6 style="color: #666; margin-bottom: 10px;">Capital Adequacy</h6>
-                        <span id="capitalAdequacy" class="badge-status status-excellent">✅ Adequate</span>
+            <div class="col-lg-3">
+                <div style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.08); height: 100%;">
+                    <h5 style="color: var(--primary-color); font-weight: 600; margin-bottom: 12px; font-size: 0.95rem;">⚠️ Risk Profile</h5>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div style="background: #f0f8ff; padding: 10px; border-radius: 6px; border-left: 3px solid #003d82;">
+                            <p style="font-size: 0.65rem; color: #666; margin: 0; font-weight: 600;">Capital</p>
+                            <p id="capitalAdequacy" style="color: #003d82; font-weight: bold; margin: 3px 0; font-size: 0.75rem;">✅ Adequate</p>
+                        </div>
+                        <div style="background: #f0f8ff; padding: 10px; border-radius: 6px; border-left: 3px solid #003d82;">
+                            <p style="font-size: 0.65rem; color: #666; margin: 0; font-weight: 600;">Concentration</p>
+                            <p id="concentrationRisk" style="color: #003d82; font-weight: bold; margin: 3px 0; font-size: 0.75rem;">✅ Low</p>
+                        </div>
+                        <div style="background: #fff5e6; padding: 10px; border-radius: 6px; border-left: 3px solid #ff6b35;">
+                            <p style="font-size: 0.65rem; color: #666; margin: 0; font-weight: 600;">Claims</p>
+                            <p id="claimsStatus" style="color: #ff6b35; font-weight: bold; margin: 3px 0; font-size: 0.75rem;">✅ Excellent</p>
+                        </div>
+                        <div style="background: #f0f8ff; padding: 10px; border-radius: 6px; border-left: 3px solid #3498db;">
+                            <p style="font-size: 0.65rem; color: #666; margin: 0; font-weight: 600;">Market</p>
+                            <p id="marketStatus" style="color: #3498db; font-weight: bold; margin: 3px 0; font-size: 0.75rem;">✅ Good</p>
+                        </div>
                     </div>
-                    <div style="margin-bottom: 15px;">
-                        <h6 style="color: #666; margin-bottom: 10px;">Concentration Risk</h6>
-                        <span id="concentrationRisk" class="badge-status status-good">✅ Low</span>
+                </div>
+            </div>
+            <div class="col-lg-3">
+                <div style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.08); height: 100%;">
+                    <h5 style="color: var(--primary-color); font-weight: 600; margin-bottom: 12px; font-size: 0.95rem;">📊 Score Cards</h5>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div style="background: #e8f5e9; padding: 10px; border-radius: 6px; border-left: 3px solid #06a77d; text-align: center;">
+                            <p style="font-size: 0.6rem; color: #666; margin: 0; font-weight: 600;">RISK</p>
+                            <p id="riskScore" style="color: #06a77d; font-weight: bold; margin: 3px 0; font-size: 1.2rem;">--</p>
+                        </div>
+                        <div style="background: #fff3e0; padding: 10px; border-radius: 6px; border-left: 3px solid #ff6b35; text-align: center;">
+                            <p style="font-size: 0.6rem; color: #666; margin: 0; font-weight: 600;">EFFICIENCY</p>
+                            <p id="efficiencyScore" style="color: #ff6b35; font-weight: bold; margin: 3px 0; font-size: 1.2rem;">--</p>
+                        </div>
+                        <div style="background: linear-gradient(135deg, #e8f5e9 0%, #f0f8ff 100%); padding: 10px; border-radius: 6px; border-left: 3px solid #3498db; text-align: center; grid-column: 1/-1;">
+                            <p style="font-size: 0.6rem; color: #666; margin: 0; font-weight: 600;">HEALTH STATUS</p>
+                            <p id="overallHealth" style="color: #003d82; font-weight: bold; margin: 3px 0; font-size: 0.95rem;">🟢 Strong</p>
+                        </div>
                     </div>
-                    <div style="margin-bottom: 15px;">
-                        <h6 style="color: #666; margin-bottom: 10px;">Claims Experience</h6>
-                        <span id="claimsStatus" class="badge-status status-excellent">✅ Excellent</span>
-                    </div>
-                    <div>
-                        <h6 style="color: #666; margin-bottom: 10px;">Market Performance</h6>
-                        <span id="marketStatus" class="badge-status status-good">✅ Good</span>
+                </div>
+            </div>
+            <div class="col-lg-3">
+                <div style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.08); height: 100%;">
+                    <h5 style="color: var(--primary-color); font-weight: 600; margin-bottom: 12px; font-size: 0.95rem;">📈 LOB Summary</h5>
+                    <div id="lobSummary" style="font-size: 0.8rem;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                            <div style="background: #e3f2fd; padding: 8px; border-radius: 5px; border-left: 2px solid #1976d2;">
+                                <p style="font-size: 0.6rem; color: #666; margin: 0;">Property</p>
+                                <p style="color: #1976d2; font-weight: bold; font-size: 0.9rem; margin: 2px 0;">$45M</p>
+                            </div>
+                            <div style="background: #f3e5f5; padding: 8px; border-radius: 5px; border-left: 2px solid #7b1fa2;">
+                                <p style="font-size: 0.6rem; color: #666; margin: 0;">Casualty</p>
+                                <p style="color: #7b1fa2; font-weight: bold; font-size: 0.9rem; margin: 2px 0;">$85M</p>
+                            </div>
+                            <div style="background: #e0f2f1; padding: 8px; border-radius: 5px; border-left: 2px solid #00796b;">
+                                <p style="font-size: 0.6rem; color: #666; margin: 0;">Marine</p>
+                                <p style="color: #00796b; font-weight: bold; font-size: 0.9rem; margin: 2px 0;">$32M</p>
+                            </div>
+                            <div style="background: #fff3e0; padding: 8px; border-radius: 5px; border-left: 2px solid #e65100;">
+                                <p style="font-size: 0.6rem; color: #666; margin: 0;">Specialty</p>
+                                <p style="color: #e65100; font-weight: bold; font-size: 0.9rem; margin: 2px 0;">$54M</p>
+                            </div>
+                        </div>
+                        <div style="background: #fce4ec; padding: 8px; border-radius: 5px; border-left: 2px solid #c2185b; margin-top: 8px;">
+                            <p style="font-size: 0.6rem; color: #666; margin: 0;">Reinsurance</p>
+                            <p style="color: #c2185b; font-weight: bold; font-size: 0.9rem; margin: 2px 0;">$40M</p>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Profitability by Geography -->
-        <h3 class="section-title">Detailed Analytics</h3>
+        <h3 class="section-title">📊 Detailed Geographic & Performance Analytics</h3>
         <div class="row mb-4">
-            <div class="col-lg-12">
+            <div class="col-lg-8">
                 <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.08);">
-                    <h5 style="color: var(--primary-color); font-weight: 600; margin-bottom: 20px;">💰 Profitability by Geography</h5>
-                    <div class="row" id="geoProfit"></div>
+                    <h5 style="color: var(--primary-color); font-weight: 600; margin-bottom: 15px;">💰 Geographic Profitability Analysis</h5>
+                    <div id="geoProfit" style="max-height: 350px; overflow-y: auto;"></div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.08); height: 100%;">
+                    <h5 style="color: var(--primary-color); font-weight: 600; margin-bottom: 15px;">🎯 Key Insights</h5>
+                    <div style="margin-bottom: 12px; padding: 10px; background: #e8f5e9; border-radius: 6px; border-left: 3px solid #06a77d;">
+                        <p style="font-size: 0.8rem; color: #666; margin: 0; font-weight: 600;">Top Market</p>
+                        <p style="color: #06a77d; font-weight: bold; margin: 4px 0;">North America</p>
+                        <p style="font-size: 0.75rem; color: #555; margin: 0;">Highest profit contribution</p>
+                    </div>
+                    <div style="margin-bottom: 12px; padding: 10px; background: #fff3e0; border-radius: 6px; border-left: 3px solid #ff6b35;">
+                        <p style="font-size: 0.8rem; color: #666; margin: 0; font-weight: 600;">Growth Opportunity</p>
+                        <p style="color: #ff6b35; font-weight: bold; margin: 4px 0;">Asia Pacific</p>
+                        <p style="font-size: 0.75rem; color: #555; margin: 0;">Fastest growing region</p>
+                    </div>
+                    <div style="margin-bottom: 12px; padding: 10px; background: #f0f8ff; border-radius: 6px; border-left: 3px solid #3498db;">
+                        <p style="font-size: 0.8rem; color: #666; margin: 0; font-weight: 600;">Expansion Area</p>
+                        <p style="color: #3498db; font-weight: bold; margin: 4px 0;">Latin America</p>
+                        <p style="font-size: 0.75rem; color: #555; margin: 0;">Emerging market potential</p>
+                    </div>
+                    <div style="padding: 10px; background: #f5f5f5; border-radius: 6px; border-left: 3px solid #999;">
+                        <p style="font-size: 0.8rem; color: #666; margin: 0; font-weight: 600;">Portfolio Balance</p>
+                        <p style="color: #666; font-weight: bold; margin: 4px 0;">Well Diversified</p>
+                        <p style="font-size: 0.75rem; color: #555; margin: 0;">No over-concentration</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CONCENTRATION & PERFORMANCE ANALYSIS -->
+        <h3 class="section-title">📊 Concentration & Performance Deep Dive</h3>
+        <div class="row mb-4">
+            <div class="col-lg-3">
+                <div style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.08); height: 100%;">
+                    <h5 style="color: var(--primary-color); font-weight: 600; margin-bottom: 12px; font-size: 0.95rem;">🎯 LOB Concentration</h5>
+                    <table class="table table-sm" style="margin: 0; font-size: 0.75rem;">
+                        <tbody>
+                            <tr><td style="padding: 4px 0;"><strong>Property</strong></td><td style="text-align: right; padding: 4px 0;">17.5%</td></tr>
+                            <tr><td style="padding: 4px 0;"><strong>Casualty</strong></td><td style="text-align: right; padding: 4px 0;">33.0% ⚠️</td></tr>
+                            <tr><td style="padding: 4px 0;"><strong>Marine</strong></td><td style="text-align: right; padding: 4px 0;">12.4%</td></tr>
+                            <tr><td style="padding: 4px 0;"><strong>Specialty</strong></td><td style="text-align: right; padding: 4px 0;">21.0%</td></tr>
+                            <tr><td style="padding: 4px 0;"><strong>Reinsurance</strong></td><td style="text-align: right; padding: 4px 0;">15.5%</td></tr>
+                        </tbody>
+                    </table>
+                    <div style="margin-top: 10px; padding: 8px; background: #fff3e0; border-radius: 5px; border-left: 2px solid #ff6b35;">
+                        <p style="font-size: 0.65rem; color: #666; margin: 0; font-weight: 600;">Max Exposure</p>
+                        <p style="color: #ff6b35; font-weight: bold; font-size: 0.85rem; margin: 2px 0;">Casualty @ 33%</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3">
+                <div style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.08); height: 100%;">
+                    <h5 style="color: var(--primary-color); font-weight: 600; margin-bottom: 12px; font-size: 0.95rem;">🌍 Geographic Mix</h5>
+                    <table class="table table-sm" style="margin: 0; font-size: 0.75rem;">
+                        <tbody>
+                            <tr><td style="padding: 4px 0;"><strong>N. America</strong></td><td style="text-align: right; padding: 4px 0;">39.6%</td></tr>
+                            <tr><td style="padding: 4px 0;"><strong>Europe</strong></td><td style="text-align: right; padding: 4px 0;">24.8%</td></tr>
+                            <tr><td style="padding: 4px 0;"><strong>Asia Pacific</strong></td><td style="text-align: right; padding: 4px 0;">19.7%</td></tr>
+                            <tr><td style="padding: 4px 0;"><strong>Latin America</strong></td><td style="text-align: right; padding: 4px 0;">10.1%</td></tr>
+                            <tr><td style="padding: 4px 0;"><strong>Africa/ME</strong></td><td style="text-align: right; padding: 4px 0;">5.0%</td></tr>
+                        </tbody>
+                    </table>
+                    <div style="margin-top: 10px; padding: 8px; background: #e8f5e9; border-radius: 5px; border-left: 2px solid #06a77d;">
+                        <p style="font-size: 0.65rem; color: #666; margin: 0; font-weight: 600;">Dominant Region</p>
+                        <p style="color: #06a77d; font-weight: bold; font-size: 0.85rem; margin: 2px 0;">N. America 39.6%</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3">
+                <div style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.08); height: 100%;">
+                    <h5 style="color: var(--primary-color); font-weight: 600; margin-bottom: 12px; font-size: 0.95rem;">📈 Performance Metrics</h5>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                        <div style="background: #e3f2fd; padding: 8px; border-radius: 5px; text-align: center;">
+                            <p style="font-size: 0.6rem; color: #666; margin: 0; font-weight: 600;">Avg RORAC</p>
+                            <p style="color: #1976d2; font-weight: bold; font-size: 1rem; margin: 3px 0;">23.5%</p>
+                        </div>
+                        <div style="background: #f3e5f5; padding: 8px; border-radius: 5px; text-align: center;">
+                            <p style="font-size: 0.6rem; color: #666; margin: 0; font-weight: 600;">Loss Ratio</p>
+                            <p style="color: #7b1fa2; font-weight: bold; font-size: 1rem; margin: 3px 0;">58.0%</p>
+                        </div>
+                        <div style="background: #e0f2f1; padding: 8px; border-radius: 5px; text-align: center;">
+                            <p style="font-size: 0.6rem; color: #666; margin: 0; font-weight: 600;">Growth Rate</p>
+                            <p style="color: #00796b; font-weight: bold; font-size: 1rem; margin: 3px 0;">12.0%</p>
+                        </div>
+                        <div style="background: #fff3e0; padding: 8px; border-radius: 5px; text-align: center;">
+                            <p style="font-size: 0.6rem; color: #666; margin: 0; font-weight: 600;">UW Perf</p>
+                            <p style="color: #e65100; font-weight: bold; font-size: 1rem; margin: 3px 0;">85%</p>
+                        </div>
+                    </div>
+                    <div style="margin-top: 10px; padding: 8px; background: #e8f5e9; border-radius: 5px; border-left: 2px solid #06a77d;">
+                        <p style="font-size: 0.65rem; color: #666; margin: 0; font-weight: 600;">Status</p>
+                        <p style="color: #06a77d; font-weight: bold; font-size: 0.85rem; margin: 2px 0;">✅ Performing Well</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3">
+                <div style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.08); height: 100%;">
+                    <h5 style="color: var(--primary-color); font-weight: 600; margin-bottom: 12px; font-size: 0.95rem;">🎲 Risk Matrix</h5>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                        <div style="background: #e8f5e9; padding: 8px; border-radius: 5px; border-left: 2px solid #06a77d;">
+                            <p style="font-size: 0.6rem; color: #666; margin: 0; font-weight: 600;">Capital</p>
+                            <p style="color: #06a77d; font-weight: bold; font-size: 0.85rem; margin: 2px 0;">100.3%</p>
+                        </div>
+                        <div style="background: #f0f8ff; padding: 8px; border-radius: 5px; border-left: 2px solid #1976d2;">
+                            <p style="font-size: 0.6rem; color: #666; margin: 0; font-weight: 600;">Diversif</p>
+                            <p style="color: #1976d2; font-weight: bold; font-size: 0.85rem; margin: 2px 0;">0.76</p>
+                        </div>
+                        <div style="background: #fff5e6; padding: 8px; border-radius: 5px; border-left: 2px solid #ff6b35;">
+                            <p style="font-size: 0.6rem; color: #666; margin: 0; font-weight: 600;">Cat Risk</p>
+                            <p style="color: #ff6b35; font-weight: bold; font-size: 0.85rem; margin: 2px 0;">Moderate</p>
+                        </div>
+                        <div style="background: #f3e5f5; padding: 8px; border-radius: 5px; border-left: 2px solid #7b1fa2;">
+                            <p style="font-size: 0.6rem; color: #666; margin: 0; font-weight: 600;">Credit</p>
+                            <p style="color: #7b1fa2; font-weight: bold; font-size: 0.85rem; margin: 2px 0;">Low</p>
+                        </div>
+                    </div>
+                    <div style="margin-top: 10px; padding: 8px; background: #e8f5e9; border-radius: 5px; border-left: 2px solid #06a77d; text-align: center;">
+                        <p style="font-size: 0.65rem; color: #666; margin: 0; font-weight: 600;">Risk Level</p>
+                        <p style="color: #06a77d; font-weight: bold; font-size: 0.9rem; margin: 2px 0;">🟢 BALANCED</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+        <!-- DYNAMIC RISK-RETURN OPTIMIZATION -->
+        <h3 class="section-title">🎯 Dynamic Risk-Return Optimization Analysis</h3>
+        <div class="row mb-4">
+            <div class="col-lg-3">
+                <div style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.08); height: 100%;">
+                    <h5 style="color: var(--primary-color); font-weight: 600; margin-bottom: 12px; font-size: 0.95rem;">💼 Asset Allocation</h5>
+                    <table class="table table-sm" style="margin: 0; font-size: 0.75rem;">
+                        <tbody>
+                            <tr style="border-bottom: 1px solid #eee;"><td style="padding: 4px 0;"><strong>Current</strong></td><td style="text-align: right; padding: 4px 0;"><strong>Target</strong></td></tr>
+                            <tr><td style="padding: 4px 0;">Direct: 65%</td><td style="text-align: right; padding: 4px 0;">60%</td></tr>
+                            <tr><td style="padding: 4px 0;">Treaty: 25%</td><td style="text-align: right; padding: 4px 0;">30%</td></tr>
+                            <tr><td style="padding: 4px 0;">Facultative: 10%</td><td style="text-align: right; padding: 4px 0;">10%</td></tr>
+                        </tbody>
+                    </table>
+                    <div style="margin-top: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+                        <div style="background: #e8f5e9; padding: 8px; border-radius: 5px; text-align: center; border-left: 2px solid #06a77d;">
+                            <p style="font-size: 0.6rem; color: #666; margin: 0;">Variance</p>
+                            <p style="color: #06a77d; font-weight: bold; font-size: 0.8rem; margin: 2px 0;">+5%</p>
+                        </div>
+                        <div style="background: #fff3e0; padding: 8px; border-radius: 5px; text-align: center; border-left: 2px solid #ff6b35;">
+                            <p style="font-size: 0.6rem; color: #666; margin: 0;">Action</p>
+                            <p style="color: #ff6b35; font-weight: bold; font-size: 0.8rem; margin: 2px 0;">Rebalance</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3">
+                <div style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.08); height: 100%;">
+                    <h5 style="color: var(--primary-color); font-weight: 600; margin-bottom: 12px; font-size: 0.95rem;">📊 Risk-Return Profile</h5>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;">
+                        <div style="background: #e3f2fd; padding: 10px; border-radius: 5px; border-left: 2px solid #1976d2;">
+                            <p style="font-size: 0.6rem; color: #666; margin: 0; font-weight: 600;">Expected Return</p>
+                            <p style="color: #1976d2; font-weight: bold; font-size: 0.95rem; margin: 2px 0;">23.5%</p>
+                        </div>
+                        <div style="background: #f3e5f5; padding: 10px; border-radius: 5px; border-left: 2px solid #7b1fa2;">
+                            <p style="font-size: 0.6rem; color: #666; margin: 0; font-weight: 600;">Volatility</p>
+                            <p style="color: #7b1fa2; font-weight: bold; font-size: 0.95rem; margin: 2px 0;">8.2%</p>
+                        </div>
+                        <div style="background: #e0f2f1; padding: 10px; border-radius: 5px; border-left: 2px solid #00796b;">
+                            <p style="font-size: 0.6rem; color: #666; margin: 0; font-weight: 600;">Sharpe Ratio</p>
+                            <p style="color: #00796b; font-weight: bold; font-size: 0.95rem; margin: 2px 0;">2.87</p>
+                        </div>
+                        <div style="background: #fff5e6; padding: 10px; border-radius: 5px; border-left: 2px solid #e65100;">
+                            <p style="font-size: 0.6rem; color: #666; margin: 0; font-weight: 600;">Max Drawdown</p>
+                            <p style="color: #e65100; font-weight: bold; font-size: 0.95rem; margin: 2px 0;">-12.3%</p>
+                        </div>
+                    </div>
+                    <div style="padding: 8px; background: #e8f5e9; border-radius: 5px; border-left: 2px solid #06a77d;">
+                        <p style="font-size: 0.65rem; color: #666; margin: 0; font-weight: 600;">Risk Grade</p>
+                        <p style="color: #06a77d; font-weight: bold; font-size: 0.85rem; margin: 2px 0;">A (Low-Moderate)</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3">
+                <div style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.08); height: 100%;">
+                    <h5 style="color: var(--primary-color); font-weight: 600; margin-bottom: 12px; font-size: 0.95rem;">⚡ Optimization Opportunity</h5>
+                    <div style="margin-bottom: 10px; padding: 10px; background: #f0f8ff; border-radius: 5px; border-left: 3px solid #3498db;">
+                        <p style="font-size: 0.65rem; color: #666; margin: 0; font-weight: 600;">Current Efficiency</p>
+                        <p style="color: #3498db; font-weight: bold; font-size: 0.9rem; margin: 2px 0;">0.85</p>
+                    </div>
+                    <div style="margin-bottom: 10px; padding: 10px; background: #e8f5e9; border-radius: 5px; border-left: 3px solid #06a77d;">
+                        <p style="font-size: 0.65rem; color: #666; margin: 0; font-weight: 600;">Potential Efficiency</p>
+                        <p style="color: #06a77d; font-weight: bold; font-size: 0.9rem; margin: 2px 0;">0.92</p>
+                    </div>
+                    <div style="padding: 10px; background: #fff3e0; border-radius: 5px; border-left: 3px solid #ff6b35;">
+                        <p style="font-size: 0.65rem; color: #666; margin: 0; font-weight: 600;">Gain Available</p>
+                        <p style="color: #ff6b35; font-weight: bold; font-size: 0.9rem; margin: 2px 0;">+8.2% upside</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3">
+                <div style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.08); height: 100%;">
+                    <h5 style="color: var(--primary-color); font-weight: 600; margin-bottom: 12px; font-size: 0.95rem;">🎯 Optimization Recommendations</h5>
+                    <div style="font-size: 0.75rem; display: grid; gap: 8px;">
+                        <div style="background: #fff3e0; padding: 8px; border-radius: 5px; border-left: 2px solid #ff6b35;">
+                            <p style="margin: 0; font-weight: 600; color: #ff6b35;">1. Reduce Casualty</p>
+                            <p style="margin: 2px 0; font-size: 0.7rem; color: #666;">From 33% → 28% (-5%)</p>
+                        </div>
+                        <div style="background: #e3f2fd; padding: 8px; border-radius: 5px; border-left: 2px solid #1976d2;">
+                            <p style="margin: 0; font-weight: 600; color: #1976d2;">2. Increase Marine</p>
+                            <p style="margin: 2px 0; font-size: 0.7rem; color: #666;">From 12.4% → 17% (+4.6%)</p>
+                        </div>
+                        <div style="background: #e8f5e9; padding: 8px; border-radius: 5px; border-left: 2px solid #06a77d;">
+                            <p style="margin: 0; font-weight: 600; color: #06a77d;">3. Expand Asia</p>
+                            <p style="margin: 2px 0; font-size: 0.7rem; color: #666;">From 19.7% → 25% (+5.3%)</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CAPITAL EFFICIENCY & ROI ANALYSIS -->
+        <h3 class="section-title">💰 Capital Efficiency & ROI Deep Dive</h3>
+        <div class="row mb-4">
+            <div class="col-lg-4">
+                <div style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.08); height: 100%;">
+                    <h5 style="color: var(--primary-color); font-weight: 600; margin-bottom: 12px; font-size: 0.95rem;">🏦 Capital Allocation</h5>
+                    <table class="table table-sm" style="margin: 0; font-size: 0.75rem;">
+                        <tbody>
+                            <tr style="border-bottom: 1px solid #eee;"><td><strong>Allocation</strong></td><td style="text-align: right;"><strong>$M</strong></td><td style="text-align: right;"><strong>%</strong></td></tr>
+                            <tr><td>Reserve</td><td style="text-align: right; color: #06a77d; font-weight: bold;">12.5</td><td style="text-align: right;">4.9%</td></tr>
+                            <tr><td>Operating</td><td style="text-align: right; color: #1976d2; font-weight: bold;">128.2</td><td style="text-align: right;">49.8%</td></tr>
+                            <tr><td>Investment</td><td style="text-align: right; color: #7b1fa2; font-weight: bold;">115.1</td><td style="text-align: right;">44.7%</td></tr>
+                        </tbody>
+                    </table>
+                    <div style="margin-top: 10px; padding: 8px; background: #e8f5e9; border-radius: 5px; border-left: 2px solid #06a77d;">
+                        <p style="font-size: 0.65rem; color: #666; margin: 0; font-weight: 600;">Total Available</p>
+                        <p style="color: #06a77d; font-weight: bold; font-size: 0.9rem; margin: 2px 0;">$255.8M</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.08); height: 100%;">
+                    <h5 style="color: var(--primary-color); font-weight: 600; margin-bottom: 12px; font-size: 0.95rem;">📊 Capital Returns</h5>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                        <div style="background: #e3f2fd; padding: 10px; border-radius: 5px; text-align: center; border-left: 2px solid #1976d2;">
+                            <p style="font-size: 0.6rem; color: #666; margin: 0; font-weight: 600;">RORAC</p>
+                            <p style="color: #1976d2; font-weight: bold; font-size: 1rem; margin: 2px 0;">23.5%</p>
+                        </div>
+                        <div style="background: #f3e5f5; padding: 10px; border-radius: 5px; text-align: center; border-left: 2px solid #7b1fa2;">
+                            <p style="font-size: 0.6rem; color: #666; margin: 0; font-weight: 600;">ROE</p>
+                            <p style="color: #7b1fa2; font-weight: bold; font-size: 1rem; margin: 2px 0;">18.2%</p>
+                        </div>
+                        <div style="background: #e0f2f1; padding: 10px; border-radius: 5px; text-align: center; border-left: 2px solid #00796b;">
+                            <p style="font-size: 0.6rem; color: #666; margin: 0; font-weight: 600;">ROI</p>
+                            <p style="color: #00796b; font-weight: bold; font-size: 1rem; margin: 2px 0;">21.1%</p>
+                        </div>
+                        <div style="background: #fff5e6; padding: 10px; border-radius: 5px; text-align: center; border-left: 2px solid #e65100;">
+                            <p style="font-size: 0.6rem; color: #666; margin: 0; font-weight: 600;">ROCE</p>
+                            <p style="color: #e65100; font-weight: bold; font-size: 1rem; margin: 2px 0;">19.7%</p>
+                        </div>
+                    </div>
+                    <div style="margin-top: 8px; padding: 8px; background: #e8f5e9; border-radius: 5px; border-left: 2px solid #06a77d; text-align: center;">
+                        <p style="font-size: 0.6rem; color: #666; margin: 0;">Efficiency Grade</p>
+                        <p style="color: #06a77d; font-weight: bold; font-size: 0.85rem; margin: 2px 0;">A+ EXCELLENT</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.08); height: 100%;">
+                    <h5 style="color: var(--primary-color); font-weight: 600; margin-bottom: 12px; font-size: 0.95rem;">🚀 Growth Forecast</h5>
+                    <table class="table table-sm" style="margin: 0; font-size: 0.75rem;">
+                        <tbody>
+                            <tr style="border-bottom: 1px solid #eee;"><td><strong>Metric</strong></td><td style="text-align: right;"><strong>YoY</strong></td></tr>
+                            <tr><td>Premium Growth</td><td style="text-align: right; color: #06a77d; font-weight: bold;">+12.0%</td></tr>
+                            <tr><td>RORAC Growth</td><td style="text-align: right; color: #1976d2; font-weight: bold;">+8.5%</td></tr>
+                            <tr><td>Capital Gain</td><td style="text-align: right; color: #7b1fa2; font-weight: bold;">+15.2%</td></tr>
+                            <tr><td>Profit Growth</td><td style="text-align: right; color: #e65100; font-weight: bold;">+18.3%</td></tr>
+                        </tbody>
+                    </table>
+                    <div style="margin-top: 8px; padding: 8px; background: #e8f5e9; border-radius: 5px; border-left: 2px solid #06a77d;">
+                        <p style="font-size: 0.65rem; color: #666; margin: 0; font-weight: 600;">Projection</p>
+                        <p style="color: #06a77d; font-weight: bold; font-size: 0.85rem; margin: 2px 0;">📈 Positive Outlook</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -605,6 +983,8 @@
                 updateCharts(metrics, adjustedEnhanced);
                 updateTopTreaties(metrics);
                 updateRiskAssessment(adjustedSummary);
+                populatePortfolioRisks(adjustedSummary);
+                updateCompositionSummary(adjustedSummary, metrics);
                 updateGeographyProfit(adjustedEnhanced);
                 
                 const istTime = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
@@ -622,7 +1002,7 @@
             
             document.getElementById('portfolioValue').textContent = `$${(pv / 1e6).toFixed(1)}M`;
             document.getElementById('capitalUtil').textContent = `${cu.toFixed(1)}%`;
-            document.getElementById('avgRorac').textContent = `${ar.toFixed(1)}%`;
+            document.getElementById('avgRorac').textContent = `${(ar / 10).toFixed(1)}%`;
             document.getElementById('diversScore').textContent = ds.toFixed(2);
             
             // Update progress bars
@@ -707,26 +1087,105 @@
                         backgroundColor: 'rgba(255, 107, 53, 0.1)',
                         tension: 0.4,
                         fill: true,
-                        borderWidth: 2
+                        borderWidth: 2,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#ff6b35',
+                        pointBorderColor: '#fff'
                     }]
                 },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true } } }
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    plugins: { 
+                        legend: { display: true },
+                        tooltip: { 
+                            callbacks: {
+                                label: (context) => 'Value: $' + context.parsed.y.toFixed(1) + 'M'
+                            }
+                        },
+                        datalabels: {
+                            display: true,
+                            color: '#000',
+                            font: { weight: 'bold', size: 10 },
+                            anchor: 'end',
+                            offset: 5,
+                            formatter: (value) => '$' + value.toFixed(1) + 'M'
+                        }
+                    },
+                    scales: {
+                        y: { beginAtZero: false, ticks: { callback: (value) => '$' + value.toFixed(0) + 'M' } }
+                    }
+                },
+                plugins: [{
+                    id: 'lineDataLabels',
+                    afterDatasetsDraw(chart) {
+                        const { ctx, data, chartArea: { left, top, width, height } } = chart;
+                        ctx.font = 'bold 10px sans-serif';
+                        ctx.fillStyle = '#000';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'bottom';
+                        
+                        data.datasets.forEach((dataset, dsIndex) => {
+                            const meta = chart.getDatasetMeta(dsIndex);
+                            meta.data.forEach((point, index) => {
+                                const value = dataset.data[index];
+                                if (value !== null && value !== undefined) {
+                                    ctx.fillText('$' + value.toFixed(1), point.x, point.y - 8);
+                                }
+                            });
+                        });
+                    }
+                }]
             });
 
             // RORAC by LOB
             const lobData = metrics.lob_breakdown || {};
-            const robData = metrics.performance_distribution || {};
             roracChart = new Chart(document.getElementById('roracChart'), {
                 type: 'bar',
                 data: {
                     labels: Object.keys(lobData),
                     datasets: [{
-                        label: 'Portfolio Value ($)',
+                        label: 'Portfolio Value ($M)',
                         data: Object.values(lobData).map(v => v / 1e6),
                         backgroundColor: ['#003d82', '#ff6b35', '#06a77d', '#ffd23f', '#d62828']
                     }]
                 },
-                options: { responsive: true, maintainAspectRatio: false, indexAxis: false }
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    indexAxis: false,
+                    plugins: {
+                        legend: { display: true },
+                        tooltip: {
+                            callbacks: {
+                                label: (context) => 'Value: $' + context.parsed.y.toFixed(1) + 'M'
+                            }
+                        }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { callback: (value) => '$' + value.toFixed(0) + 'M' } }
+                    }
+                },
+                plugins: [{
+                    id: 'barDataLabels',
+                    afterDatasetsDraw(chart) {
+                        const { ctx, data } = chart;
+                        ctx.font = 'bold 10px sans-serif';
+                        ctx.fillStyle = '#000';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'bottom';
+                        
+                        data.datasets.forEach((dataset, dsIndex) => {
+                            const meta = chart.getDatasetMeta(dsIndex);
+                            meta.data.forEach((bar, index) => {
+                                const value = dataset.data[index];
+                                if (value !== null && value !== undefined) {
+                                    ctx.fillText('$' + value.toFixed(1), bar.x, bar.y - 3);
+                                }
+                            });
+                        });
+                    }
+                }]
             });
 
             // Claims Ratio Trend
@@ -741,13 +1200,30 @@
                         backgroundColor: 'rgba(214, 40, 40, 0.1)',
                         tension: 0.4,
                         fill: true,
-                        borderWidth: 2
+                        borderWidth: 2,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#d62828',
+                        pointBorderColor: '#fff'
                     }]
                 },
-                options: { responsive: true, maintainAspectRatio: false }
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: true },
+                        tooltip: {
+                            callbacks: {
+                                label: (context) => 'Ratio: ' + context.parsed.y.toFixed(1) + '%'
+                            }
+                        }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { callback: (value) => value.toFixed(0) + '%' } }
+                    }
+                }
             });
 
-            // LOB Chart
+            // LOB Chart - Doughnut
             lobChart = new Chart(document.getElementById('lobChart'), {
                 type: 'doughnut',
                 data: {
@@ -757,10 +1233,50 @@
                         backgroundColor: ['#003d82', '#ff6b35', '#06a77d', '#ffd23f', '#d62828']
                     }]
                 },
-                options: { responsive: true, maintainAspectRatio: false }
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: true },
+                        tooltip: {
+                            callbacks: {
+                                label: (context) => context.label + ': $' + context.parsed + 'M'
+                            }
+                        }
+                    }
+                },
+                plugins: [{
+                    id: 'doughnutDataLabels',
+                    afterDatasetsDraw(chart) {
+                        const { ctx, data, chartArea } = chart;
+                        ctx.font = 'bold 9px sans-serif';
+                        ctx.fillStyle = '#000';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        
+                        const centerX = (chartArea.left + chartArea.right) / 2;
+                        const centerY = (chartArea.top + chartArea.bottom) / 2;
+                        const radius = Math.min(chartArea.right - chartArea.left, chartArea.bottom - chartArea.top) / 2;
+                        
+                        let currentAngle = -Math.PI / 2;
+                        data.datasets.forEach((dataset) => {
+                            const total = dataset.data.reduce((a, b) => parseFloat(a) + parseFloat(b), 0);
+                            dataset.data.forEach((value, index) => {
+                                const sliceAngle = (parseFloat(value) / total) * 2 * Math.PI;
+                                const labelAngle = currentAngle + sliceAngle / 2;
+                                const labelRadius = radius * 0.65;
+                                const x = centerX + labelRadius * Math.cos(labelAngle);
+                                const y = centerY + labelRadius * Math.sin(labelAngle);
+                                
+                                ctx.fillText('$' + value + 'M', x, y);
+                                currentAngle += sliceAngle;
+                            });
+                        });
+                    }
+                }]
             });
 
-            // Geo Chart
+            // Geo Chart - Doughnut
             const geoData = metrics.geography_breakdown || {};
             geoChart = new Chart(document.getElementById('geoChart'), {
                 type: 'doughnut',
@@ -771,12 +1287,57 @@
                         backgroundColor: ['#003d82', '#ff6b35', '#06a77d', '#3498db', '#9b59b6']
                     }]
                 },
-                options: { responsive: true, maintainAspectRatio: false }
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: true },
+                        tooltip: {
+                            callbacks: {
+                                label: (context) => {
+                                    const total = context.dataset.data.reduce((a, b) => parseFloat(a) + parseFloat(b), 0);
+                                    const percentage = ((context.parsed / total) * 100).toFixed(1);
+                                    return context.label + ': ' + percentage + '%';
+                                }
+                            }
+                        }
+                    }
+                },
+                plugins: [{
+                    id: 'geoDataLabels',
+                    afterDatasetsDraw(chart) {
+                        const { ctx, data, chartArea } = chart;
+                        ctx.font = 'bold 9px sans-serif';
+                        ctx.fillStyle = '#000';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        
+                        const centerX = (chartArea.left + chartArea.right) / 2;
+                        const centerY = (chartArea.top + chartArea.bottom) / 2;
+                        const radius = Math.min(chartArea.right - chartArea.left, chartArea.bottom - chartArea.top) / 2;
+                        
+                        let currentAngle = -Math.PI / 2;
+                        data.datasets.forEach((dataset) => {
+                            const total = dataset.data.reduce((a, b) => parseFloat(a) + parseFloat(b), 0);
+                            dataset.data.forEach((value, index) => {
+                                const sliceAngle = (parseFloat(value) / total) * 2 * Math.PI;
+                                const labelAngle = currentAngle + sliceAngle / 2;
+                                const labelRadius = radius * 0.65;
+                                const x = centerX + labelRadius * Math.cos(labelAngle);
+                                const y = centerY + labelRadius * Math.sin(labelAngle);
+                                
+                                const percentage = ((parseFloat(value) / total) * 100).toFixed(0);
+                                ctx.fillText(percentage + '%', x, y);
+                                currentAngle += sliceAngle;
+                            });
+                        });
+                    }
+                }]
             });
 
             // Progress Bars
             const cu = (enhanced.capital_utilization || 65);
-            const roracPercent = (enhanced.average_rorac || 22);
+            const roracPercent = (enhanced.average_rorac || 22) / 10;
             document.getElementById('capUtilBar').style.width = Math.min(cu, 100) + '%';
             document.getElementById('roracBar').style.width = Math.min(roracPercent, 100) + '%';
             document.getElementById('capUtil').textContent = cu.toFixed(1) + '%';
@@ -862,9 +1423,160 @@
             }
             document.getElementById('marketStatus').textContent = marketStatus;
             document.getElementById('marketStatus').className = marketClass;
+            
+            // Calculate Overall Health Score (0-100)
+            let healthScore = 0;
+            // Capital adequacy score (0-25)
+            healthScore += cu > 100 ? 10 : cu > 95 ? 18 : cu > 85 ? 25 : 20;
+            // Concentration score (0-25)
+            healthScore += ds > 0.7 ? 25 : ds > 0.5 ? 15 : 5;
+            // Claims score (0-25)
+            healthScore += cr < 50 ? 25 : cr < 60 ? 25 : cr < 70 ? 18 : 10;
+            // Market/UW score (0-25)
+            healthScore += uw > 85 ? 25 : uw > 75 ? 22 : uw > 60 ? 15 : 8;
+            
+            let healthStatus = '🔴 Poor';
+            if (healthScore > 85) healthStatus = '🟢 Strong';
+            else if (healthScore > 70) healthStatus = '🟡 Moderate';
+            else if (healthScore > 55) healthStatus = '🟠 Fair';
+            
+            document.getElementById('overallHealth').textContent = healthStatus;
+        }
+
+        function populatePortfolioRisks(summary) {
+            const cu = summary.capital_utilization || 0;
+            const ds = summary.diversification_score || 0;
+            const cr = (summary.average_loss_ratio || 55);
+            
+            // Determine risks based on metrics
+            const risks = [];
+            
+            // 1. Concentration Risk
+            let concRiskLevel = 'Low';
+            let concRiskColor = '#06a77d';
+            let concRiskDesc = 'Portfolio diversification score above 0.7';
+            if (ds < 0.6) {
+                concRiskLevel = 'High';
+                concRiskColor = '#d62828';
+                concRiskDesc = 'Casualty segment represents >30% of premium';
+            } else if (ds < 0.7) {
+                concRiskLevel = 'Medium';
+                concRiskColor = '#ff6b35';
+                concRiskDesc = 'Casualty segment at 25-30% of premium';
+            }
+            risks.push({
+                title: 'Concentration Risk',
+                description: concRiskDesc,
+                level: concRiskLevel,
+                color: concRiskColor,
+                icon: '📊'
+            });
+            
+            // 2. Catastrophe Exposure
+            let catRiskLevel = 'Low';
+            let catRiskColor = '#06a77d';
+            let catRiskDesc = 'Property segment CAT exposure at historical average';
+            if (cr > 65) {
+                catRiskLevel = 'High';
+                catRiskColor = '#d62828';
+                catRiskDesc = 'Claims ratio above target, CAT exposure elevated';
+            } else if (cr > 55) {
+                catRiskLevel = 'Medium';
+                catRiskColor = '#ff6b35';
+                catRiskDesc = 'Property segment CAT exposure near threshold';
+            }
+            risks.push({
+                title: 'Catastrophe Exposure',
+                description: catRiskDesc,
+                level: catRiskLevel,
+                color: catRiskColor,
+                icon: '⚡'
+            });
+            
+            // 3. Capital Utilization
+            let capRiskLevel = 'Low';
+            let capRiskColor = '#06a77d';
+            let capRiskDesc = 'Capital deployment efficiency within target range';
+            if (cu > 110) {
+                capRiskLevel = 'High';
+                capRiskColor = '#d62828';
+                capRiskDesc = 'Capital deployment exceeds acceptable limits';
+            } else if (cu > 100) {
+                capRiskLevel = 'Medium';
+                capRiskColor = '#ff6b35';
+                capRiskDesc = 'Capital deployment efficiency acceptable';
+            }
+            risks.push({
+                title: 'Capital Utilization',
+                description: capRiskDesc,
+                level: capRiskLevel,
+                color: capRiskColor,
+                icon: '💰'
+            });
+            
+            // Render risks
+            const risksContainer = document.getElementById('portfolioRisks');
+            risksContainer.innerHTML = risks.map(risk => `
+                <div class="col-12 mb-3">
+                    <div style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.08); border-left: 4px solid ${risk.color};">
+                        <div style="display: flex; justify-content: space-between; align-items: start;">
+                            <div style="flex: 1;">
+                                <h5 style="margin: 0; color: var(--primary-color); font-weight: 600; font-size: 0.95rem;">
+                                    ${risk.icon} ${risk.title}
+                                </h5>
+                                <p style="margin: 8px 0 0 0; color: #666; font-size: 0.85rem;">
+                                    ${risk.description}
+                                </p>
+                            </div>
+                            <div style="padding: 6px 16px; background: ${risk.color}20; border-radius: 20px; border: 1px solid ${risk.color}40; margin-left: 15px; white-space: nowrap;">
+                                <p style="margin: 0; color: ${risk.color}; font-weight: 700; font-size: 0.85rem;">${risk.level}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateCompositionSummary(summary, metrics) {
+            const cu = summary.capital_utilization || 0;
+            const ds = summary.diversification_score || 0;
+            
+            // Capital Utilization
+            document.getElementById('compositionCapUt').textContent = cu.toFixed(1) + '%';
+            document.getElementById('capUtBar').style.width = Math.min(cu, 100) + '%';
+            
+            // Concentration Level
+            let concLevel = 'Medium';
+            let concColor = '#ff6b35';
+            if (ds > 0.7) {
+                concLevel = 'Low';
+                concColor = '#06a77d';
+            } else if (ds < 0.6) {
+                concLevel = 'High';
+                concColor = '#d62828';
+            }
+            document.getElementById('compositionConc').textContent = concLevel;
+            document.getElementById('concStatus').textContent = concLevel;
+            document.getElementById('concStatus').parentElement.style.borderLeftColor = concColor;
+            document.getElementById('concStatus').style.color = concColor;
+            document.getElementById('concStatus').parentElement.parentElement.style.background = concColor + '15';
+            
+            // Performance Trend
+            const trendChange = (metrics && metrics.performance_change) || 2.5;
+            document.getElementById('performanceTrend').textContent = trendChange > 0 ? '📈 Improving' : '📉 Declining';
+            document.getElementById('trendChange').textContent = (trendChange > 0 ? '+' : '') + trendChange.toFixed(1) + '%';
         }
 
         function updateGeographyProfit(enhanced) {
+            const geoData = enhanced.geography_breakdown || {
+                'North America': 102000000,
+                'Europe': 64000000,
+                'Asia Pacific': 51000000,
+                'Latin America': 26000000,
+                'Africa/ME': 13000000
+            };
+            
+            const totalGeo = Object.values(geoData).reduce((a, b) => a + b, 0);
             const geos = enhanced.geography_profit || {
                 'North America': 52,
                 'Europe': 38,
@@ -874,15 +1586,19 @@
             };
             
             const container = document.getElementById('geoProfit');
-            container.innerHTML = Object.entries(geos).map(([geo, profit]) => `
-                <div class="col-lg-4 col-md-6 mb-3">
-                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; text-align: center;">
-                        <h6 style="color: var(--primary-color); margin-bottom: 10px;">${geo}</h6>
-                        <div style="font-size: 1.5rem; font-weight: 700; color: var(--success-color);">$${profit}M</div>
-                        <small class="text-muted">Profit</small>
-                    </div>
-                </div>
-            `).join('');
+            const geoArray = Object.entries(geos).sort((a, b) => b[1] - a[1]);
+            
+            let html = '<table class="table table-sm" style="margin: 0;"><thead style="background-color: #f8f9fa;"><tr><th>Geography</th><th>Profit</th><th>Premium</th><th>% of Total</th><th>Status</th></tr></thead><tbody>';
+            
+            geoArray.forEach(([geo, profit]) => {
+                const premium = geoData[geo] ? (geoData[geo] / 1e6).toFixed(1) : 0;
+                const pctTotal = geoData[geo] ? ((geoData[geo] / totalGeo) * 100).toFixed(1) : 0;
+                const status = pctTotal > 30 ? '📍 High' : pctTotal > 15 ? '📍 Moderate' : '📍 Low';
+                html += '<tr><td><strong>' + geo + '</strong></td><td style="color: #06a77d; font-weight: bold;">$' + profit + 'M</td><td>$' + premium + 'M</td><td>' + pctTotal + '%</td><td>' + status + '</td></tr>';
+            });
+            
+            html += '</tbody></table>';
+            container.innerHTML = html;
         }
 
         function updateTimestamp() {

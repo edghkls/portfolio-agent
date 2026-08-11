@@ -272,6 +272,30 @@ def dashboard_enhanced():
     load_portfolio()
     return render_template('dashboard-enhanced.html')
 
+@app.route('/portfolio-health')
+def portfolio_health():
+    """Portfolio Health Executive Dashboard"""
+    load_portfolio()
+    return render_template('portfolio-health.html')
+
+@app.route('/risk-return-optimization')
+def risk_return_optimization():
+    """Risk-Return Optimization Dashboard"""
+    load_portfolio()
+    return render_template('risk-return-optimization.html')
+
+@app.route('/data-aggregation')
+def data_aggregation():
+    """Data Aggregation Dashboard"""
+    load_portfolio()
+    return render_template('data-aggregation.html')
+
+@app.route('/deal-impact')
+def deal_impact():
+    """Deal Impact Assessment Dashboard"""
+    load_portfolio()
+    return render_template('deal-impact.html')
+
 # ============ API ENDPOINTS ============
 
 
@@ -478,13 +502,23 @@ def analyze_portfolio():
         enhanced = analyzer.calculate_enhanced_metrics()
         summary = PORTFOLIO_DATA
         
+        # Get actual metrics for priority determination
+        risk_concentration = enhanced.get('risk_concentration_index', 24)
+        capital_util = enhanced.get('capital_utilization', 93)
+        loss_ratio = enhanced.get('claims_ratio', 43.6)
+        
+        # Determine priority based on actual metrics
+        concentration_priority = 'High' if risk_concentration > 30 else 'Medium' if risk_concentration > 20 else 'Low'
+        capital_priority = 'High' if capital_util > 100 else 'Medium' if capital_util > 95 else 'Low'
+        claims_priority = 'High' if loss_ratio > 65 else 'Medium' if loss_ratio > 55 else 'Low'
+        
         # Identify optimization opportunities
         opportunities = [
             {
                 'action': 'Rebalance Concentration Risk',
-                'reason': f"Risk concentration at {enhanced.get('risk_concentration_index', 24):.1f}%. Diversify into underweighted LOBs to reduce below 20%.",
+                'reason': f"Risk concentration at {risk_concentration:.1f}%. Diversify into underweighted LOBs to reduce below 20%.",
                 'potential_impact': '$2.5M capital optimization',
-                'priority': 'High'
+                'priority': concentration_priority
             },
             {
                 'action': 'Expand High-Performing Geographies',
@@ -494,15 +528,15 @@ def analyze_portfolio():
             },
             {
                 'action': 'Optimize Claims Experience',
-                'reason': 'Current loss ratio at 43.6%. Target improvement to 40% through better underwriting selection.',
+                'reason': f'Current loss ratio at {loss_ratio:.1f}%. Target improvement to 40% through better underwriting selection.',
                 'potential_impact': '$1.8M profit improvement',
-                'priority': 'Medium'
+                'priority': claims_priority
             },
             {
                 'action': 'Deploy Additional Capital',
-                'reason': f"Capital utilization at {enhanced.get('capital_utilization', 93):.1f}%. Maintain optimal level while exploring higher-RORAC opportunities.",
+                'reason': f"Capital utilization at {capital_util:.1f}%. Maintain optimal level (75-95%) while exploring higher-RORAC opportunities.",
                 'potential_impact': '$500K efficiency gain',
-                'priority': 'Low'
+                'priority': capital_priority
             }
         ]
         
